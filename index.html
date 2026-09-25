@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QSHE Index Dashboard — สายงาน NGV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgenjs.bundle.js"></script>
+<style>
+:root{
+  /* Better Together palette, applied to the QSHE dashboard's existing
+     CSS variables so the whole page picks it up without rewriting every
+     rule. Level colors (L1-L5, red/orange/yellow/green) stay untouched
+     since they carry real meaning (worse..better), not just decoration. */
+  --navy:#1B2A6B;       /* was #0B2F5C  -> BT --petrol   */
+  --blue:#2E9BF0;       /* was #1E73BE  -> BT --petrol-2 */
+  --blue-dark:#16213A;  /* was #1B2A6B  -> BT --ink      */
+  --teal:#2E9BF0;       /* was #0FD6C4  -> BT --teal     */
+  --teal2:#0EC6E6;      /* was #159AD6  -> BT --red (cyan accent) */
+  --ink:#16213A;        /* was #1B2A38  -> BT --ink      */
+  --ink-soft:#51607A;   /* was #5B6B79  -> BT --ink-soft */
+  --l1-soft:#F9CBC9; --l1-solid:#EE9C9B;
+  --l2-soft:#FBE1BE; --l2-solid:#F5BF87;
+  --l3-soft:#FBF4B4; --l3-solid:#F2E066;
+  --l4-soft:#D8F0DD; --l4-solid:#A6E1B7;
+  --l5-soft:#BFF0D6; --l5-solid:#65D998;
+  --gray-dash:#E4E8EB;
+  /* Better Together extras used directly by the reskinned shell */
+  --bt-paper:#F4F8FC;
+  --bt-line:#E1E8F0;
+  --bt-amber:#FF7EC4;
+  --bt-amber-deep:#C23E8F;
+  --bt-radius:12px;
+  --font-display:'Kanit',sans-serif;
+  --font-body:'IBM Plex Sans Thai',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bt-paper);font-family:var(--font-body);color:var(--ink);}
+h1,h2,h3,.disp{font-family:var(--font-display);}
+
+/* ---------------- Deck shell (continuous scrolling page) ---------------- */
+#deck{
+  width:100%;
+  padding:100px 16px 60px;
+  box-sizing:border-box;
+}
+#stage{
+  width:100%; max-width:1280px; margin:0 auto;
+  display:flex; flex-direction:column; gap:28px;
+}
+.slide{
+  width:100%; min-height:720px;
+  background:#fff;
+  position:relative;
+  display:flex !important;
+  flex-direction:column;
+  overflow:hidden;
+  border-radius:var(--bt-radius);
+  border:1px solid var(--bt-line);
+  box-shadow:0 2px 10px rgba(20,30,45,.06);
+  scroll-margin-top:130px; /* so anchor-jumping doesn't tuck a section under the sticky toolbar/nav */
+}
+
+/* bottom gradient strip used across slides */
+.strip{
+  position:absolute; left:0; right:0; bottom:0; height:10px;
+  background:linear-gradient(90deg,var(--teal) 0%, var(--teal2) 55%, var(--blue) 100%);
+}
+.brandmark{
+  position:absolute; top:26px; right:34px; display:flex; align-items:center; gap:8px;
+  font-family:'Kanit',sans-serif; font-weight:700; font-size:15px; color:var(--navy);
+}
+.brandmark .flame{width:20px;height:20px;}
+.tagline{
+  position:absolute; right:34px; bottom:22px; font-size:11.5px; color:#fff; font-weight:600;
+  display:flex; align-items:center; gap:8px; z-index:2;
+}
+
+/* ---------------- Cover slide ---------------- */
+.cover{
+  background:
+    linear-gradient(rgba(10,20,55,.32), rgba(10,20,55,.32)),
+    linear-gradient(135deg, #FF7EC4 0%, #B98FE0 28%, #2E9BF0 62%, #00D8FF 100%);
+  color:#fff; justify-content:center; padding:70px 90px;
+}
+.cover .flame-mark{position:absolute; top:34px; left:40px; display:flex; align-items:center; gap:10px; font-family:'Kanit'; font-weight:700; font-size:17px;}
+.cover .eyebrow{font-size:13px; letter-spacing:.03em; color:#D8F7F1; margin:0 0 10px; font-weight:600;}
+.cover h1{font-size:44px; line-height:1.25; margin:0; font-weight:700; max-width:820px;}
+.cover .foot{position:absolute; right:60px; bottom:50px; text-align:right; font-size:13.5px; color:#EAF7FF; line-height:1.6;}
+
+/* ---------------- Divider slide ---------------- */
+.divider{align-items:center; justify-content:center; text-align:center; position:relative; min-height:340px !important;}
+.divider .num{color:var(--ink); font-weight:700;}
+.divider h2{font-size:34px; margin:0; font-weight:700; color:#111;}
+.divider .sub{font-size:22px; margin-top:10px; font-weight:700; color:#111;}
+
+/* ---------------- Hero divider (with illustration) ---------------- */
+.hero-divider{position:relative; align-items:center; justify-content:center; padding:0 100px; flex-direction:row; gap:50px; min-height:420px !important;}
+.hero-divider .hero-illus{width:230px; height:230px; flex-shrink:0;}
+.hero-divider .hero-illus svg{width:100%; height:100%;}
+.hero-divider .hero-text h2{font-size:38px; color:var(--navy); font-weight:700; margin:0;}
+.hero-divider .hero-text .sub{font-size:26px; color:var(--navy); font-weight:700; margin-top:8px;}
+
+/* ---------------- Content slide header ---------------- */
+.content{padding:26px 40px 22px;}
+.content h2.title{font-size:26px; color:var(--blue); margin:0 0 16px; font-weight:700; padding-right:170px;}
+.content h2.title b{color:var(--blue);}
+.content h2.title .date-part{color:#111;}
+
+/* ---------------- KPI grid (overview slide) ---------------- */
+.kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px;}
+.kpi-box{border:1px solid #E1E6EA; border-radius:8px; padding:14px 16px;}
+.kpi-box .lbl{font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-bottom:6px;}
+.kpi-box .val{font-family:'Kanit'; font-size:28px; font-weight:700; color:var(--navy);}
+.kpi-box .val small{font-size:13px; color:var(--ink-soft); font-weight:500;}
+
+.chart-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+.chart-card{border:1px solid #E1E6EA; border-radius:8px; padding:12px 16px 6px;}
+.chart-card .h{font-size:13px; font-weight:700; color:#fff; padding:6px 10px; border-radius:5px; margin-bottom:8px; display:inline-block;}
+
+.legend-row{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center;}
+.legend-chip{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); background:#F5F8FA; border:1px solid #E1E6EA; padding:4px 9px; border-radius:14px;}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+/* ---------------- QSHE Index table slide ---------------- */
+.qtable-wrap{padding:0 40px 24px;}
+table.qtable{width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed;}
+table.qtable th, table.qtable td{border:1px solid #E1E6EA; padding:5px 6px; text-align:center; vertical-align:middle;}
+table.qtable thead th{background:#DCEBF7; color:var(--navy); font-weight:700; font-size:11.5px;}
+table.qtable thead .band-row th{font-size:10.5px; font-weight:700; color:#5a4a2a;}
+table.qtable td.kpi-name{text-align:left; font-weight:600; color:var(--ink);}
+table.qtable td.kpi-desc{text-align:left; font-size:11px; color:var(--ink-soft);}
+tr.cat-row td{background:var(--blue); color:#fff; font-weight:700; text-align:left; font-size:12.5px; padding:6px 10px;}
+tr.overall-row td{background:var(--navy); color:#fff; font-weight:700; text-align:left; font-size:13px; padding:6px 10px;}
+.pill{display:inline-block; min-width:30px; padding:2px 6px; border-radius:4px; font-weight:700; color:#123; font-size:11.5px;}
+.dash{color:#aaa; font-size:11px;}
+
+/* ---------------- Safety slide ---------------- */
+/* ---------------- Personal Safety section (Employee/Contractor cards) ---------------- */
+.ps-title{font-family:'Kanit',sans-serif; font-size:16px; font-weight:700; text-align:center; color:var(--ink); margin-bottom:8px;}
+.ps-section{display:flex; gap:6px; margin-bottom:10px;}
+.ps-tag{
+  writing-mode:vertical-rl; transform:rotate(180deg); text-align:center;
+  font-family:'Kanit',sans-serif; font-weight:700; font-size:12px; color:var(--ink);
+  display:flex; align-items:center; justify-content:center; gap:5px; flex:none; width:20px; padding:4px 0;
+}
+.ps-tag svg{width:22px; height:22px; writing-mode:horizontal-tb; transform:rotate(180deg); flex:none;}
+.ps-body{flex:1; min-width:0;}
+.ps-metrics{display:grid; gap:4px; margin-bottom:2px;}
+.ps-metric{text-align:center; min-width:0;}
+.ps-metric svg{width:30px; height:30px;}
+.ps-metric .ps-metric-cap{font-size:8px; color:var(--ink-soft); line-height:1.15; height:22px; overflow:hidden; margin-top:1px; overflow-wrap:break-word; word-break:break-word;}
+table.ps-table{width:100%; border-collapse:collapse; font-size:9.5px;}
+table.ps-table th{color:#fff; font-weight:700; padding:4px 2px; text-align:center; font-size:10px;}
+table.ps-table td{border:1px solid #fff; padding:4px 3px; text-align:center; background:#fff;}
+table.ps-table td.ps-rowlabel{font-weight:700; background:#F4F8FC; color:var(--ink); width:34px;}
+table.ps-table tr.ps-result td{font-weight:700;}
+table.ps-table.green th{background:#0F9D58;}
+table.ps-table.green tr.ps-result td{background:#C7F0D8;}
+table.ps-table.red th{background:#E53935;}
+table.ps-table.red tr.ps-result td{background:#F8CFCD;}
+table.ps-table tr.ps-result td.ps-rowlabel{background:#F4F8FC;}
+
+.obj-box{background:#DFFBFB; border:1px solid #B7EDEE; border-radius:6px; padding:14px 18px; margin-bottom:16px; font-size:13px;}
+.obj-box .head{background:#3E7FD9; color:#fff; font-weight:700; padding:6px 12px; border-radius:5px; display:inline-block; margin:-14px -18px 12px; width:calc(100% + 36px);}
+.obj-box p{margin:4px 0;}
+
+table.safety-tbl{width:100%; border-collapse:collapse; font-size:12.5px;}
+table.safety-tbl th,table.safety-tbl td{border:1px solid #fff; padding:8px; text-align:center;}
+table.safety-tbl thead th{background:#5B93D6; color:#fff; font-weight:700;}
+table.safety-tbl tbody tr:nth-child(odd) td.rowlabel{background:#EAF0F8;}
+
+/* ---------------- Backup slide ---------------- */
+.backup-list{font-size:14px; line-height:1.9;}
+.backup-list code{background:#F0F3F6; padding:1px 6px; border-radius:4px; font-size:12.5px;}
+.flag-note{background:#FFF6E9; border:1px solid #F3D9A6; color:#8a5a12; padding:12px 16px; border-radius:6px; font-size:13px; margin-top:14px;}
+
+/* ---------------- Thank-you slide ---------------- */
+.thanks{
+  background:linear-gradient(135deg, #FF6FC0 0%, #9C8FE0 35%, #2E9BF0 68%, #00D8FF 100%);
+  color:#fff; align-items:center; justify-content:center; min-height:340px !important;
+}
+.thanks h1{font-size:56px; font-weight:700; margin:0;}
+
+/* ---------------- Report-card slides (Q Performance / Safety / Security / Env / Legal) ---------------- */
+.report{padding:20px 34px 16px;}
+.report h2.rtitle{font-size:24px; color:var(--navy); margin:0 0 12px; font-weight:700; padding-right:160px;}
+.report .cols{display:grid; gap:12px; max-height:565px; overflow-y:auto;}
+.report .cols > div{min-width:0;} /* prevent a column's content (e.g. long captions) from forcing it wider than its 1fr share */
+.report .colhead{font-size:13.5px; font-weight:700; text-align:center; color:var(--ink); margin-bottom:6px;}
+.rag-box{border:1px solid #333; border-radius:2px; margin-bottom:10px; font-size:10.5px; overflow:hidden;}
+.rag-box .rag-head{padding:5px 8px; font-weight:700; color:#fff; font-size:10.5px; text-align:center;}
+.rag-box.green .rag-head{background:#0F9D58;}
+.rag-box.red .rag-head{background:#E53935;}
+.rag-box.yellow .rag-head{background:#F5B301;}
+.rag-box.blue .rag-head{background:#3E7FD9;}
+.rag-box.gray .rag-head{background:#9AA1A8;}
+.rag-box .rag-row{display:flex; border-top:1px solid #333;}
+.rag-box .rag-row .rlabel{width:56px; flex-shrink:0; font-weight:700; padding:4px 6px; border-right:1px solid #333; background:#fafafa;}
+.rag-box .rag-row .rval{padding:4px 6px; flex:1;}
+.mini-icon{width:34px; height:34px; margin:0 auto 4px; display:block;}
+.mini-chart-card{border:1px solid #ccc; border-radius:4px; padding:6px 8px 2px; margin-top:6px;}
+.mini-chart-card .mctitle{font-size:10px; font-weight:700; text-align:center;}
+.mini-chart-card canvas, .mini-chart-card .fallback-chart{margin-top:auto;} /* when the card is a flex column (stretched taller by a sibling), this keeps the title pinned at top and pushes the chart itself down flush with the bottom instead of floating with empty space beneath it */
+.report .divline{border-left:2px dashed #d33; height:100%;}
+.rag-legend{
+  position:absolute; left:34px; bottom:18px; z-index:2;
+  display:flex; gap:14px; font-size:10.5px;
+  background:rgba(255,255,255,.94); padding:4px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.rag-legend span{display:flex; align-items:center; gap:5px; white-space:nowrap;}
+.rag-legend i{width:14px; height:14px; display:inline-block; border-radius:2px; flex-shrink:0;}
+.stat-block{border-radius:6px; padding:12px 16px; text-align:center; margin-bottom:10px;}
+.stat-block .n{font-family:'Kanit'; font-size:30px; font-weight:700;}
+.stat-block .t{font-size:13px; font-weight:700;}
+.pyramid-row{color:#fff; font-weight:700; font-size:11px; padding:4px 6px; text-align:center; margin-bottom:2px;}
+
+/* ---------------- Quick-nav (jump to section) ---------------- */
+#monthReminder{
+  position:fixed; left:0; right:0; z-index:53;
+  background:#FFF4D6; border-bottom:1px solid #F0D385; color:#7a5200;
+  display:flex; align-items:center; gap:14px; padding:8px 18px; font-size:12.5px; font-weight:600;
+}
+#monthReminder button{
+  font-family:'IBM Plex Sans Thai',sans-serif; font-size:12px; font-weight:700; cursor:pointer; border-radius:7px; padding:5px 12px; border:none;
+}
+#monthReminder #btnDismissReminder{background:#1B2A6B; color:#fff;}
+#monthReminder #btnSnoozeReminder{background:transparent; color:#7a5200; padding:5px 8px; margin-left:auto; font-size:14px;}
+#quickNav{
+  position:fixed; left:0; right:0; top:50px; z-index:54;
+  background:var(--navy); border-bottom:1px solid rgba(255,255,255,.12);
+  display:flex; align-items:center; gap:10px; padding:8px 18px;
+}
+#quickNav label{color:rgba(255,255,255,.65); font-size:12px; white-space:nowrap;}
+#quickNav select{
+  flex:1; max-width:420px; background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:8px;
+  padding:7px 10px; font-size:12.5px; font-family:'IBM Plex Sans Thai',sans-serif;
+}
+#quickNav .scrollpct{color:var(--bt-amber); font-weight:700; font-size:11.5px; margin-left:auto; white-space:nowrap;}
+#progressTrack{position:fixed; top:0; left:0; right:0; height:4px; background:rgba(0,0,0,.2); z-index:60;}
+#progressBar{height:100%; background:linear-gradient(90deg,var(--bt-amber),var(--teal2)); width:0%; transition:width .15s ease;}
+
+/* ---------------- Toolbar (Excel data link) ---------------- */
+#toolbar{
+  position:fixed; top:4px; left:0; right:0; z-index:55;
+  background:
+    linear-gradient(rgba(10,20,55,.45), rgba(10,20,55,.45)),
+    linear-gradient(120deg, #FF7EC4 0%, #B98FE0 25%, #2E9BF0 60%, #00D8FF 100%);
+  color:#fff; font-size:13px;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:9px 18px; box-shadow:0 6px 18px rgba(0,0,0,.18);
+}
+#toolbar .tb-label{color:rgba(255,255,255,.75); font-size:12px;}
+#toolbar .tb-file{font-weight:600; color:#fff;}
+#toolbar .tb-btn{
+  background:var(--bt-amber);
+  color:var(--navy); border:none; padding:7px 14px; border-radius:8px;
+  font-weight:700; font-size:12.5px; cursor:pointer; font-family:'IBM Plex Sans Thai',sans-serif;
+}
+#toolbar .tb-btn.secondary{background:rgba(255,255,255,.12); color:#fff; font-weight:600; border:1px solid rgba(255,255,255,.25);}
+#toolbar .tb-btn:hover{filter:brightness(1.08);}
+#toolbar input[type=file]{display:none;}
+#toolbar .tb-status{font-size:11.5px; color:rgba(255,255,255,.75); margin-left:auto;}
+#toolbar .tb-status.warn{color:#ffe08a;}
+#toolbar .tb-status.ok{color:#a7f3c8;}
+#toolbar .tb-btn.admin{background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.3);}
+
+/* ---------------- Admin panel ---------------- */
+#adminOverlay{
+  position:fixed; inset:0; background:rgba(10,16,22,.55); z-index:200;
+  display:none; align-items:flex-start; justify-content:stretch; padding:0; overflow-y:auto;
+}
+#adminOverlay.open{display:flex;}
+#adminPanel{
+  background:#fff; border-radius:0; width:100%; min-height:100vh; box-shadow:none;
+  overflow:hidden; font-family:'IBM Plex Sans Thai',sans-serif;
+  display:flex; flex-direction:column;
+}
+#adminPanel .ap-head{
+  background:linear-gradient(90deg,var(--navy),var(--blue)); color:#fff; padding:16px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:5; flex:none;
+}
+#adminPanel .ap-head h3{margin:0; font-family:'Kanit'; font-size:18px; font-weight:600;}
+#adminPanel .ap-head button{background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px;}
+#adminPanel .ap-body{padding:20px 24px; flex:1; overflow-y:visible; width:100%; box-sizing:border-box;}
+#adminPanel .ap-section{margin-bottom:26px;}
+#adminPanel .ap-section h4{font-family:'Kanit'; font-size:14.5px; color:#1B2A6B; margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid #DCEEFB;}
+#adminPanel table.ap-table{border-collapse:collapse; width:100%; font-size:12px;}
+#adminPanel table.ap-table th, #adminPanel table.ap-table td{border:1px solid #e5e7eb; padding:5px 6px; text-align:center;}
+#adminPanel table.ap-table th{background:#EAF4FD; color:#1B2A6B; font-weight:600; position:sticky; top:0;}
+#adminPanel table.ap-table td.lbl{text-align:left; font-weight:600; min-width:170px;}
+#adminPanel table.ap-table input[type=number]{width:52px; padding:3px; border:1px solid #d1d5db; border-radius:4px; text-align:center; font-size:12px;}
+#adminPanel table.ap-table input[type=text]{width:100%; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:11.5px; box-sizing:border-box;}
+#adminPanel .ap-scrollx{overflow-x:auto; border:1px solid #eee; border-radius:6px;}
+#adminPanel tr.cat td{background:#EAF4FD;}
+#adminPanel .ap-foot{padding:16px 24px; border-top:1px solid #eee; display:flex; gap:10px; align-items:center; justify-content:flex-end; position:sticky; bottom:0; background:#fff; z-index:5; flex:none;}
+#adminPanel .ap-btn{padding:9px 18px; border-radius:7px; border:none; font-weight:700; font-size:13px; cursor:pointer; font-family:'IBM Plex Sans Thai',sans-serif;}
+#adminPanel .ap-btn.save{background:linear-gradient(90deg,#16a34a,#22c55e); color:#fff;}
+#adminPanel .ap-btn.cancel{background:#e5e7eb; color:#374151;}
+#adminPanel .ap-btn.reset{background:#fee2e2; color:#991b1b; margin-right:auto;}
+#adminPanel .ap-note{font-size:11.5px; color:#6b7280; margin-top:8px;}
+#adminPanel .ap-note code{background:#DCEEFB; color:#1B2A6B; padding:1px 5px; border-radius:4px; font-size:11px;}
+#adminPanel input.formula-cell{width:100%; padding:3px; border:1px solid #d1d5db; border-radius:4px; text-align:center; font-size:11.5px; box-sizing:border-box;}
+#adminPanel input.formula-cell.is-formula{color:#C23E8F; font-style:italic; font-weight:700; border-color:#9CC9F5;}
+#adminPanel .view-cell{padding:4px 5px; font-size:11.5px; color:#1f2937; min-height:1.3em; white-space:pre-wrap; word-break:break-word;}
+#adminPanel .view-cell.is-formula{color:#C23E8F; font-style:italic; font-weight:700;}
+#adminPanel table.ap-table td{ vertical-align:middle; }
+#adminPanel .idx-chip{display:inline-block; min-width:20px; padding:2px 6px; background:#EAF4FD; color:#1B2A6B; border-radius:10px; font-weight:700; font-size:11px;}
+#adminPanel td.row-idx-badge{ text-align:center; }
+</style>
+</head>
+<body>
+
+<div id="progressTrack"><div id="progressBar"></div></div>
+<div id="toolbar">
+  <span class="tb-label">แหล่งข้อมูล QSHE Index:</span>
+  <span class="tb-file" id="tbFileName">ข้อมูลตัวอย่าง (Demo)</span>
+  <button class="tb-btn admin" id="btnAdminToggle">🔧 โหมดแอดมิน</button>
+  <button class="tb-btn admin" id="btnAdminEdit" style="display:none;">✏️ แก้ไขข้อมูล</button>
+  <button class="tb-btn secondary" id="btnExportPptx">📊 พิมพ์เป็น PPT</button>
+  <button class="tb-btn secondary" id="btnSendEmail">📧 ส่งอีเมลแจ้งเสร็จสิ้น</button>
+  <span class="tb-status" id="tbStatus">แสดงข้อมูลตัวอย่างที่ฝังไว้ในไฟล์ — เข้าสู่โหมดแอดมินเพื่อแก้ไขข้อมูลเอง</span>
+</div>
+<div id="monthReminder" style="display:none;">
+  <span>🔔 เข้าสู่เดือนใหม่แล้ว — อย่าลืมอัปเดตข้อมูลประจำเดือน<span id="reminderMonthName"></span></span>
+  <button type="button" id="btnDismissReminder">✅ ทำเครื่องหมายว่าอัปเดตแล้วเดือนนี้</button>
+  <button type="button" id="btnSnoozeReminder" title="ปิดไว้ก่อน จะเตือนอีกครั้งเมื่อเปิดไฟล์ใหม่">✕</button>
+</div>
+<div id="quickNav">
+  <label for="navSelect">ไปที่หัวข้อ:</label>
+  <select id="navSelect"></select>
+  <span class="scrollpct" id="scrollPct">0%</span>
+</div>
+<div id="deck"></div>
+<div id="adminOverlay"></div>
+
+<script>
+const DEMO_DATA = {"meta": {"source_file": "NGV_QSHE_KPI-Deployment_2026_Result_คก_.xlsx", "generated_note": "ข้อมูล QSHE Index ปี 2569 (2026) - ระดับฝ่าย (Sheet: QSHE Index(EVP-VP)) และระดับส่วน (Sheet: QSHE INDEX 2026)", "avg_tier1": 4.06, "avg_tier2": 3.35, "period_label": "M7-2569 (กรกฎาคม 2026)", "notify_email": "", "last_updated_month": ""}, "tier1": [{"name": "ผกก.", "qshe_index": 4.1, "weight_pct": 5}, {"name": "ผจ.ตกก.", "qshe_index": null, "weight_pct": 5}, {"name": "ผจ.ปกก.", "qshe_index": 4.152857142857143, "weight_pct": 7}, {"name": "ผจ.บกก.", "qshe_index": 5, "weight_pct": 7}, {"name": "ผจ.พกก.", "qshe_index": 4.25, "weight_pct": 5}, {"name": "ผจ.คก.", "qshe_index": 2.8, "weight_pct": 10}], "tier2": [{"name": "ผจ.กธ.", "overall": 3.4625000000000004, "role_model": 5, "quality": 3, "sshe": 5, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.วข.", "overall": 3.4625000000000004, "role_model": 5, "quality": 3, "sshe": 5, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.พผ.", "overall": 3.4625000000000004, "role_model": 5, "quality": 3, "sshe": 5, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.บถ.", "overall": 3.0625, "role_model": 5, "quality": 1.5833333333333333, "sshe": 4.560975609756096, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.วม", "overall": 3.1225, "role_model": 5, "quality": 1.642857142857143, "sshe": 5, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.จห.", "overall": 2.9499999999999997, "role_model": 5, "quality": 1.6666666666666667, "sshe": 5, "km_academy": 1.2499999999999998, "asset_gap": null}, {"name": "ผจ.ปถ.", "overall": 3.435, "role_model": 5, "quality": 2.7272727272727275, "sshe": 3.976744186046511, "km_academy": 2.5, "asset_gap": null}, {"name": "ผจ.ปน.", "overall": 3.5725000000000007, "role_model": 5, "quality": 3.6363636363636367, "sshe": 3.976744186046511, "km_academy": 2.25, "asset_gap": null}, {"name": "ผจ.รส", "overall": 3.6350000000000002, "role_model": 5, "quality": 3.8, "sshe": 3.899999999999999, "km_academy": 2.5, "asset_gap": null}, {"name": "ผจ.ขห.", "overall": 3.575, "role_model": 5, "quality": 3, "sshe": 4.428571428571428, "km_academy": 2.5, "asset_gap": null}, {"name": "ผจ.ลค.", "overall": 3.775, "role_model": 5, "quality": 3, "sshe": 4.999999999999999, "km_academy": 2.5, "asset_gap": null}, {"name": "ผจ.สส.", "overall": 3.0075, "role_model": 5, "quality": 3, "sshe": 4.68, "km_academy": 1.25, "asset_gap": null}, {"name": "ผจ.คก.", "overall": 3.0300000000000002, "role_model": 5, "quality": 1.5, "sshe": 3.874999999999999, "km_academy": null, "asset_gap": 0}], "safety_lta": {"ผกก.": 5, "ผจ.ตกก.": 5, "ผจ.ปกก.": 5, "ผจ.บกก.": 5, "ผจ.พกก.": 5, "ผจ.คก.": 5}, "safety_pse": {"ผกก.": 5, "ผจ.ตกก.": 5, "ผจ.ปกก.": 5, "ผจ.บกก.": 5, "ผจ.พกก.": 5, "ผจ.คก.": 5}, "tier2_rows": [{"row": 3, "is_category": true, "name": "QSHE Index", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": 3.4625000000000004, "ผจ.วข.": 3.4625000000000004, "ผจ.พผ.": 3.4625000000000004, "ผจ.บถ.": 3.0625, "ผจ.วม": 3.1225, "ผจ.จห.": 2.9499999999999997, "ผจ.ปถ.": 3.435, "ผจ.ปน.": 3.5725000000000007, "ผจ.รส": 3.6350000000000002, "ผจ.ขห.": 3.575, "ผจ.ลค.": 3.775, "ผจ.สส.": 3.0075, "ผจ.คก.": 3.0300000000000002}, "weights": {"ผจ.กธ.": 0.05, "ผจ.วข.": 0.05, "ผจ.พผ.": 0.05, "ผจ.บถ.": 0.05, "ผจ.วม": 0.05, "ผจ.จห.": 0.05, "ผจ.ปถ.": 0.05, "ผจ.ปน.": 0.05, "ผจ.รส": 0.05, "ผจ.ขห.": 0.05, "ผจ.ลค.": 0.05, "ผจ.สส.": 0.05, "ผจ.คก.": 0.05}, "scores": {"ผจ.กธ.": 0.17312500000000003, "ผจ.วข.": 0.17312500000000003, "ผจ.พผ.": 0.17312500000000003, "ผจ.บถ.": 0.153125, "ผจ.วม": 0.156125, "ผจ.จห.": 0.1475, "ผจ.ปถ.": 0.17175, "ผจ.ปน.": 0.17862500000000003, "ผจ.รส": 0.18175000000000002, "ผจ.ขห.": 0.17875000000000002, "ผจ.ลค.": 0.18875, "ผจ.สส.": 0.150375, "ผจ.คก.": 0.15150000000000002}, "has_level": true}, {"row": 4, "is_category": true, "name": "1. QSHE Role Model", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": 0.005, "ผจ.วข.": 0.005, "ผจ.พผ.": 0.005, "ผจ.บถ.": 0.005, "ผจ.วม": 0.005, "ผจ.จห.": 0.005, "ผจ.ปถ.": 0.005, "ผจ.ปน.": 0.005, "ผจ.รส": 0.005, "ผจ.ขห.": 0.005, "ผจ.ลค.": 0.005, "ผจ.สส.": 0.005, "ผจ.คก.": 0.01}, "scores": {"ผจ.กธ.": 0.025, "ผจ.วข.": 0.025, "ผจ.พผ.": 0.025, "ผจ.บถ.": 0.025, "ผจ.วม": 0.025, "ผจ.จห.": 0.025, "ผจ.ปถ.": 0.025, "ผจ.ปน.": 0.025, "ผจ.รส": 0.025, "ผจ.ขห.": 0.025, "ผจ.ลค.": 0.025, "ผจ.สส.": 0.025, "ผจ.คก.": 0.05}, "has_level": true}, {"row": 5, "is_category": false, "name": "1.1 QSHE Talk", "kpi_desc": "จำนวนครั้ง QSHE Talk \nในที่ประชุมส่วน", "unit": "ครั้ง", "bands": ["1 ครั้ง", null, "2 ครั้ง", "3 ครั้ง", "4 ครั้ง"], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": 0.005, "ผจ.วข.": 0.005, "ผจ.พผ.": 0.005, "ผจ.บถ.": 0.005, "ผจ.วม": 0.005, "ผจ.จห.": 0.005, "ผจ.ปถ.": 0.005, "ผจ.ปน.": 0.005, "ผจ.รส": 0.005, "ผจ.ขห.": 0.005, "ผจ.ลค.": 0.005, "ผจ.สส.": 0.005, "ผจ.คก.": 0.01}, "scores": {"ผจ.กธ.": 0.025, "ผจ.วข.": 0.025, "ผจ.พผ.": 0.025, "ผจ.บถ.": 0.025, "ผจ.วม": 0.025, "ผจ.จห.": 0.025, "ผจ.ปถ.": 0.025, "ผจ.ปน.": 0.025, "ผจ.รส": 0.025, "ผจ.ขห.": 0.025, "ผจ.ลค.": 0.025, "ผจ.สส.": 0.025, "ผจ.คก.": 0.05}, "has_level": true}, {"row": 6, "is_category": true, "name": "2. Quality", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": 3, "ผจ.วข.": 3, "ผจ.พผ.": 3, "ผจ.บถ.": 1.5833333333333333, "ผจ.วม": 1.642857142857143, "ผจ.จห.": 1.6666666666666667, "ผจ.ปถ.": 2.7272727272727275, "ผจ.ปน.": 3.6363636363636367, "ผจ.รส": 3.8, "ผจ.ขห.": 3, "ผจ.ลค.": 3, "ผจ.สส.": 3, "ผจ.คก.": 1.5}, "weights": {"ผจ.กธ.": 0.015, "ผจ.วข.": 0.015, "ผจ.พผ.": 0.015, "ผจ.บถ.": 0.012, "ผจ.วม": 0.013999999999999999, "ผจ.จห.": 0.015, "ผจ.ปถ.": 0.011, "ผจ.ปน.": 0.011, "ผจ.รส": 0.0125, "ผจ.ขห.": 0.015, "ผจ.ลค.": 0.015, "ผจ.สส.": 0.015, "ผจ.คก.": 0.016}, "scores": {"ผจ.กธ.": 0.045, "ผจ.วข.": 0.045, "ผจ.พผ.": 0.045, "ผจ.บถ.": 0.019, "ผจ.วม": 0.023, "ผจ.จห.": 0.025, "ผจ.ปถ.": 0.03, "ผจ.ปน.": 0.04, "ผจ.รส": 0.0475, "ผจ.ขห.": 0.045, "ผจ.ลค.": 0.045, "ผจ.สส.": 0.045, "ผจ.คก.": 0.024}, "has_level": true}, {"row": 7, "is_category": false, "name": "2.1 PIC (Productivity Improvement Circle)", "kpi_desc": "Level of Progress \n& Result ของการปรับปรุงงาน ผ่านโครงการคุณภาพ", "unit": "% Progress", "bands": ["หน่วยงานทำ Loss Assessment", "หน่วยงานลงทะเบียน PIC Project ", "รายงาน Progress Report ให้ผู้บริหาร ส่วน/ฝ่าย อย่างน้อย ทุก 2 เดือน  หลังจดทะเบียนโครงการ", "หน่วยงานบันทึก และอนุมัติผลลัพธ์ PIC Project ภายใน ต.ค. 66", "บรรลุตามเป้าหมายของแต่ละ PIC Project ที่หน่วยงานได้ลงทะเบียนไว้"], "levels": {"ผจ.กธ.": 2, "ผจ.วข.": 2, "ผจ.พผ.": 2, "ผจ.บถ.": 2, "ผจ.วม": 2, "ผจ.จห.": 2, "ผจ.ปถ.": 3, "ผจ.ปน.": 5, "ผจ.รส": 3, "ผจ.ขห.": 2, "ผจ.ลค.": 2, "ผจ.สส.": 2, "ผจ.คก.": 2}, "weights": {"ผจ.กธ.": 0.01, "ผจ.วข.": 0.01, "ผจ.พผ.": 0.01, "ผจ.บถ.": 0.007, "ผจ.วม": 0.009, "ผจ.จห.": 0.01, "ผจ.ปถ.": 0.005, "ผจ.ปน.": 0.005, "ผจ.รส": 0.0075, "ผจ.ขห.": 0.01, "ผจ.ลค.": 0.01, "ผจ.สส.": 0.01, "ผจ.คก.": 0.008}, "scores": {"ผจ.กธ.": 0.02, "ผจ.วข.": 0.02, "ผจ.พผ.": 0.02, "ผจ.บถ.": 0.014, "ผจ.วม": 0.018, "ผจ.จห.": 0.02, "ผจ.ปถ.": 0.015, "ผจ.ปน.": 0.025, "ผจ.รส": 0.0225, "ผจ.ขห.": 0.02, "ผจ.ลค.": 0.02, "ผจ.สส.": 0.02, "ผจ.คก.": 0.016}, "has_level": true}, {"row": 8, "is_category": false, "name": "2.2 Document Control", "kpi_desc": "ระบบการจัดการ", "unit": "ร้อยละของเอกสารการปฏิบัติงานที่มีการจัดทำหรือทบทวนสอดคล้องกับกระบวนการหลัก (Core Process) ตามแผนที่กำหนด ", "bands": ["<60%", 0.7, 0.8, 0.9, 1], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 1, "ผจ.วม": 1, "ผจ.จห.": 1, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": 1}, "weights": {"ผจ.กธ.": 0.005, "ผจ.วข.": 0.005, "ผจ.พผ.": 0.005, "ผจ.บถ.": 0.005, "ผจ.วม": 0.005, "ผจ.จห.": 0.005, "ผจ.ปถ.": 0.003, "ผจ.ปน.": 0.003, "ผจ.รส": 0.005, "ผจ.ขห.": 0.005, "ผจ.ลค.": 0.005, "ผจ.สส.": 0.005, "ผจ.คก.": 0.008}, "scores": {"ผจ.กธ.": 0.025, "ผจ.วข.": 0.025, "ผจ.พผ.": 0.025, "ผจ.บถ.": 0.005, "ผจ.วม": 0.005, "ผจ.จห.": 0.005, "ผจ.ปถ.": 0.015, "ผจ.ปน.": 0.015, "ผจ.รส": 0.025, "ผจ.ขห.": 0.025, "ผจ.ลค.": 0.025, "ผจ.สส.": 0.025, "ผจ.คก.": 0.008}, "has_level": true}, {"row": 9, "is_category": false, "name": "2.3 TPM", "kpi_desc": "สถานีหลัก", "unit": "จำนวนสถานี", "bands": ["รักษาระบบ TPM AM step 3 สถานีหลัก น้อยกว่าสถานีที่ดำเนินการ", "-", "-", "-", "รักษาระบบ TPM AM step 3 สถานีหลักทุกสถานีที่ดำเนินการ"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.003, "ผจ.ปน.": 0.003, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": false}, {"row": 10, "is_category": true, "name": "3. SSHE", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 4.560975609756096, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 3.976744186046511, "ผจ.ปน.": 3.976744186046511, "ผจ.รส": 3.899999999999999, "ผจ.ขห.": 4.428571428571428, "ผจ.ลค.": 4.999999999999999, "ผจ.สส.": 4.68, "ผจ.คก.": 3.874999999999999}, "weights": {"ผจ.กธ.": 0.0175, "ผจ.วข.": 0.0175, "ผจ.พผ.": 0.0175, "ผจ.บถ.": 0.020500000000000004, "ผจ.วม": 0.0185, "ผจ.จห.": 0.016, "ผจ.ปถ.": 0.021500000000000005, "ผจ.ปน.": 0.021500000000000005, "ผจ.รส": 0.020000000000000004, "ผจ.ขห.": 0.0175, "ผจ.ลค.": 0.0175, "ผจ.สส.": 0.0125, "ผจ.คก.": 0.020000000000000004}, "scores": {"ผจ.กธ.": 0.08750000000000001, "ผจ.วข.": 0.08750000000000001, "ผจ.พผ.": 0.08750000000000001, "ผจ.บถ.": 0.0935, "ผจ.วม": 0.0925, "ผจ.จห.": 0.08, "ผจ.ปถ.": 0.0855, "ผจ.ปน.": 0.0855, "ผจ.รส": 0.078, "ผจ.ขห.": 0.0775, "ผจ.ลค.": 0.0875, "ผจ.สส.": 0.058499999999999996, "ผจ.คก.": 0.0775}, "has_level": true}, {"row": 11, "is_category": false, "name": "3.1 LTA", "kpi_desc": "Loss Time Accident (พนักงาน)", "unit": "คน", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.00125, "ผจ.วข.": 0.00125, "ผจ.พผ.": 0.00125, "ผจ.บถ.": 0.00125, "ผจ.วม": 0.002, "ผจ.จห.": 0.002, "ผจ.ปถ.": 0.001, "ผจ.ปน.": 0.001, "ผจ.รส": 0.0025, "ผจ.ขห.": 0.00125, "ผจ.ลค.": 0.0025, "ผจ.สส.": 0.00125, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0.00625, "ผจ.วข.": 0.00625, "ผจ.พผ.": 0.00625, "ผจ.บถ.": 0.00625, "ผจ.วม": 0.01, "ผจ.จห.": 0.01, "ผจ.ปถ.": 0.005, "ผจ.ปน.": 0.005, "ผจ.รส": 0.0125, "ผจ.ขห.": 0.00625, "ผจ.ลค.": 0.0125, "ผจ.สส.": 0.00625, "ผจ.คก.": null}, "has_level": true}, {"row": 12, "is_category": false, "name": "Loss Time Accident (ผู้รับเหมา)", "kpi_desc": null, "unit": "คน", "bands": [">=2", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 1, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.00125, "ผจ.วข.": 0.00125, "ผจ.พผ.": 0.00125, "ผจ.บถ.": 0.00125, "ผจ.วม": 0.002, "ผจ.จห.": 0.002, "ผจ.ปถ.": 0.001, "ผจ.ปน.": 0.001, "ผจ.รส": 0.0025, "ผจ.ขห.": 0.00125, "ผจ.ลค.": 0.0025, "ผจ.สส.": 0.00125, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0.00625, "ผจ.วข.": 0.00625, "ผจ.พผ.": 0.00625, "ผจ.บถ.": 0.00125, "ผจ.วม": 0.01, "ผจ.จห.": 0.01, "ผจ.ปถ.": 0.005, "ผจ.ปน.": 0.005, "ผจ.รส": 0.0125, "ผจ.ขห.": 0.00625, "ผจ.ลค.": 0.0125, "ผจ.สส.": 0.00625, "ผจ.คก.": null}, "has_level": true}, {"row": 13, "is_category": false, "name": "3.2 PSE (Tier 1)", "kpi_desc": "Process Safety Event (Tier 1)", "unit": "คน ต่อ 200,000 ชั่วโมงการทำงาน", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.01, "ผจ.ปน.": 0.01, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": true}, {"row": 14, "is_category": false, "name": "3.3 จำนวนอุบัติเหตุระดับ Major/ Catastrophic", "kpi_desc": "Major/ Catastrophic Accident (ยกเว้น ปกก.)", "unit": "ครั้ง", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.005, "ผจ.วข.": 0.005, "ผจ.พผ.": 0.005, "ผจ.บถ.": 0.002, "ผจ.วม": 0.0065, "ผจ.จห.": 0.004, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0025, "ผจ.ลค.": 0.00625, "ผจ.สส.": 0.003, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0.025, "ผจ.วข.": 0.025, "ผจ.พผ.": 0.025, "ผจ.บถ.": 0.01, "ผจ.วม": 0.0325, "ผจ.จห.": 0.02, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0125, "ผจ.ลค.": 0.03125, "ผจ.สส.": 0.015, "ผจ.คก.": null}, "has_level": true}, {"row": 15, "is_category": false, "name": "Major Car accident", "kpi_desc": null, "unit": "ครั้ง", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": 0.01, "ผจ.วข.": 0.01, "ผจ.พผ.": 0.01, "ผจ.บถ.": 0.004, "ผจ.วม": 0.008, "ผจ.จห.": 0.008, "ผจ.ปถ.": 0.004, "ผจ.ปน.": 0.004, "ผจ.รส": 0.005, "ผจ.ขห.": 0.005, "ผจ.ลค.": 0.00625, "ผจ.สส.": 0.003, "ผจ.คก.": 0.005}, "scores": {"ผจ.กธ.": 0.05, "ผจ.วข.": 0.05, "ผจ.พผ.": 0.05, "ผจ.บถ.": 0.02, "ผจ.วม": 0.04, "ผจ.จห.": 0.04, "ผจ.ปถ.": 0.02, "ผจ.ปน.": 0.02, "ผจ.รส": 0.025, "ผจ.ขห.": 0.025, "ผจ.ลค.": 0.03125, "ผจ.สส.": 0.015, "ผจ.คก.": 0.025}, "has_level": true}, {"row": 16, "is_category": false, "name": "3.4 จำนวนอุบัติเหตุระดับ Medium", "kpi_desc": "สถานีบริการ", "unit": "จำนวนอุบัติเหตุระดับ Medium (ครั้ง)", "bands": ["> 1 ครั้ง", "-", "1 ครั้ง", "-", "0 ครั้ง"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 5, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 5, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.002, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0025, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.002}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.01, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0125, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.01}, "has_level": true}, {"row": 18, "is_category": false, "name": "3.5 การรายงานและแก้ไข Substandard/ Near Miss", "kpi_desc": "สถานีหลัก", "unit": "จำนวน SS/ Near Miss (ครั้ง) ต่อสถานีบริการ และแก้ไขแล้วเสร็จ", "bands": ["สถานีละ <12 เรื่อง/ปี", "-", "-", "-", "สถานีละ 12 เรื่อง/ปี"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.002}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0}, "has_level": false}, {"row": 19, "is_category": false, "name": "สถานีบริการ", "kpi_desc": null, "unit": "แก้ไขข้อบกพร่องระดับ major (ครั้ง) จาก Safety audit (งานบริหาร)", "bands": ["<60% ของ major case จาก Safety audit", "70% ของ major case จาก Safety audit", "80% ของ major case จาก Safety audit", "90% ของ major case จาก Safety audit", "100% ของ major case จาก Safety audit"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 1, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 1}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0025, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.0025}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": 0.0025, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.0025}, "has_level": true}, {"row": 21, "is_category": false, "name": "3.6 Integrated Management System", "kpi_desc": "IMS Mother Station", "unit": "การรับรอง", "bands": ["ไม่ผ่านการรับรอง", "-", "-", "-", "ผ่านการรับรอง"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": 0.002, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.01, "ผจ.ปน.": 0.01, "ผจ.รส": 0, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": true}, {"row": 22, "is_category": false, "name": "IMS NGV Care Center", "kpi_desc": null, "unit": "การรับรอง", "bands": ["ไม่ผ่านการรับรอง", "-", "-", "-", "ผ่านการรับรอง"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": false}, {"row": 23, "is_category": false, "name": "3.7 Security Audit", "kpi_desc": "Security Audit Mother Station", "unit": "% การแก้ไขข้อบกพร่อง", "bands": ["<60%", 0.7, 0.8, 0.9, 1], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": false}, {"row": 24, "is_category": false, "name": "3.8 ข้อมูลการปล่อยก๊าซเรือนกระจก", "kpi_desc": "การรายงานข้อมูลการปล่อยก๊าซเรือนกระจก", "unit": "การรายงาน", "bands": ["ไม่รายงาน", "รายงาน Q4/2025", "รายงาน Q1/2026", "รายงาน Q2/2026", "รายงาน Q3/2026"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 4, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 4, "ผจ.ปน.": 4, "ผจ.รส": 4, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": 4, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.002, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": 0.002, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": 0.004, "ผจ.คก.": null}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.008, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.008, "ผจ.ปน.": 0.008, "ผจ.รส": 0.008, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": 0.016, "ผจ.คก.": null}, "has_level": true}, {"row": 25, "is_category": false, "name": "3.9 Spill", "kpi_desc": "Spill to environment (≥ 0.5 barrel) ", "unit": "ครั้ง", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 5, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.002, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": 0.002, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.002}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.01, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.01, "ผจ.ปน.": 0.01, "ผจ.รส": 0.01, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.01}, "has_level": true}, {"row": 26, "is_category": false, "name": "Sig. spill to environment (≥ 50 barrel or sensitive area ทุกปริมาณ)", "kpi_desc": null, "unit": "ครั้ง", "bands": [">=1", " -", "-", "- ", 0], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 5, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 5}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.002, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.0015, "ผจ.ปน.": 0.0015, "ผจ.รส": 0.002, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.002}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": 0.01, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.0075, "ผจ.ปน.": 0.0075, "ผจ.รส": 0.01, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.01}, "has_level": true}, {"row": 27, "is_category": false, "name": "3.10 การขอรับรองด้านสิ่งแวดล้อม (LESS/ GFL/TEA)", "kpi_desc": "สถานีบริการ", "unit": "จำนวนสถานี", "bands": [5, 10, 15, 20, 25], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": false}, {"row": 28, "is_category": false, "name": "สถานีหลัก", "kpi_desc": null, "unit": "จำนวนสถานี", "bands": [1, 3, 5, 7, 9], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.002, "ผจ.ปน.": 0.002, "ผจ.รส": 0.002, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 0.01, "ผจ.ปน.": 0.01, "ผจ.รส": 0, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": true}, {"row": 29, "is_category": true, "name": "4. KM/ Academy", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": 1.25, "ผจ.วข.": 1.25, "ผจ.พผ.": 1.25, "ผจ.บถ.": 1.25, "ผจ.วม": 1.25, "ผจ.จห.": 1.2499999999999998, "ผจ.ปถ.": 2.5, "ผจ.ปน.": 2.25, "ผจ.รส": 2.5, "ผจ.ขห.": 2.5, "ผจ.ลค.": 2.5, "ผจ.สส.": 1.25, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.0125, "ผจ.วข.": 0.0125, "ผจ.พผ.": 0.0125, "ผจ.บถ.": 0.0125, "ผจ.วม": 0.0125, "ผจ.จห.": 0.014, "ผจ.ปถ.": 0.0125, "ผจ.ปน.": 0.0125, "ผจ.รส": 0.0125, "ผจ.ขห.": 0.0125, "ผจ.ลค.": 0.0125, "ผจ.สส.": 0.0175, "ผจ.คก.": null}, "scores": {"ผจ.กธ.": 0.015625, "ผจ.วข.": 0.015625, "ผจ.พผ.": 0.015625, "ผจ.บถ.": 0.015625, "ผจ.วม": 0.015625, "ผจ.จห.": 0.017499999999999998, "ผจ.ปถ.": 0.03125, "ผจ.ปน.": 0.028125, "ผจ.รส": 0.03125, "ผจ.ขห.": 0.03125, "ผจ.ลค.": 0.03125, "ผจ.สส.": 0.021875000000000002, "ผจ.คก.": null}, "has_level": true}, {"row": 30, "is_category": false, "name": "4.1 KM", "kpi_desc": "NGV KM DAY ครั้งที่ 1 ", "unit": "ครั้ง", "bands": ["เข้าร่วม <50%", "เข้าร่วม 60%", "เข้าร่วม 70%", "เข้าร่วม 80%", "เข้าร่วม >=95%"], "levels": {"ผจ.กธ.": 5, "ผจ.วข.": 5, "ผจ.พผ.": 5, "ผจ.บถ.": 5, "ผจ.วม": 5, "ผจ.จห.": 5, "ผจ.ปถ.": 5, "ผจ.ปน.": 5, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.003125, "ผจ.วข.": 0.003125, "ผจ.พผ.": 0.003125, "ผจ.บถ.": 0.003125, "ผจ.วม": 0.003125, "ผจ.จห.": 0.0034999999999999996, "ผจ.ปถ.": 0.003125, "ผจ.ปน.": 0.003125, "ผจ.รส": 0.003125, "ผจ.ขห.": 0.003125, "ผจ.ลค.": 0.003125, "ผจ.สส.": 0.004375, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0.015625, "ผจ.วข.": 0.015625, "ผจ.พผ.": 0.015625, "ผจ.บถ.": 0.015625, "ผจ.วม": 0.015625, "ผจ.จห.": 0.017499999999999998, "ผจ.ปถ.": 0.015625, "ผจ.ปน.": 0.015625, "ผจ.รส": 0.015625, "ผจ.ขห.": 0.015625, "ผจ.ลค.": 0.015625, "ผจ.สส.": 0.021875000000000002, "ผจ.คก.": null}, "has_level": true}, {"row": 31, "is_category": false, "name": "NGV KM DAY ครั้งที่ 2", "kpi_desc": null, "unit": "ครั้ง", "bands": ["เข้าร่วม <50%", "เข้าร่วม 60%", "เข้าร่วม 70%", "เข้าร่วม 80%", "เข้าร่วม >=95%"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.003125, "ผจ.วข.": 0.003125, "ผจ.พผ.": 0.003125, "ผจ.บถ.": 0.003125, "ผจ.วม": 0.003125, "ผจ.จห.": 0.0034999999999999996, "ผจ.ปถ.": 0.003125, "ผจ.ปน.": 0.003125, "ผจ.รส": 0.003125, "ผจ.ขห.": 0.003125, "ผจ.ลค.": 0.003125, "ผจ.สส.": 0.004375, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0, "ผจ.วข.": 0, "ผจ.พผ.": 0, "ผจ.บถ.": 0, "ผจ.วม": 0, "ผจ.จห.": 0, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": 0, "ผจ.ขห.": 0, "ผจ.ลค.": 0, "ผจ.สส.": 0, "ผจ.คก.": null}, "has_level": false}, {"row": 32, "is_category": false, "name": "KM Sharing", "kpi_desc": null, "unit": "จำนวนเรื่อง", "bands": ["ไม่มีการดำเนินการ", "1 เรื่อง", "-", "2 เรื่อง", "3 เรื่อง"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": 5, "ผจ.ปน.": 4, "ผจ.รส": 5, "ผจ.ขห.": 5, "ผจ.ลค.": 5, "ผจ.สส.": 5, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.003125, "ผจ.วข.": 0.003125, "ผจ.พผ.": 0.003125, "ผจ.บถ.": 0.003125, "ผจ.วม": 0.003125, "ผจ.จห.": 0.0034999999999999996, "ผจ.ปถ.": 0.003125, "ผจ.ปน.": 0.003125, "ผจ.รส": 0.003125, "ผจ.ขห.": 0.003125, "ผจ.ลค.": 0.003125, "ผจ.สส.": 0.004375, "ผจ.คก.": null}, "scores": {"ผจ.กธ.": 0, "ผจ.วข.": 0, "ผจ.พผ.": 0, "ผจ.บถ.": 0, "ผจ.วม": 0, "ผจ.จห.": null, "ผจ.ปถ.": 0.015625, "ผจ.ปน.": 0.0125, "ผจ.รส": 0.015625, "ผจ.ขห.": 0.015625, "ผจ.ลค.": 0.015625, "ผจ.สส.": null, "ผจ.คก.": null}, "has_level": true}, {"row": 33, "is_category": false, "name": "จำนวนพนักงานที่ไปประเมิน LO Assessment", "kpi_desc": null, "unit": "% จำนวนผู้บริหาร และพนักงาน", "bands": [0.6, 0.7, 0.8, 0.9, 1], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": 0.003125, "ผจ.วข.": 0.003125, "ผจ.พผ.": 0.003125, "ผจ.บถ.": 0.003125, "ผจ.วม": 0.003125, "ผจ.จห.": 0.0034999999999999996, "ผจ.ปถ.": 0.003125, "ผจ.ปน.": 0.003125, "ผจ.รส": 0.003125, "ผจ.ขห.": 0.003125, "ผจ.ลค.": 0.003125, "ผจ.สส.": 0.004375, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0, "ผจ.วข.": 0, "ผจ.พผ.": 0, "ผจ.บถ.": 0, "ผจ.วม": 0, "ผจ.จห.": 0, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": 0, "ผจ.ขห.": 0, "ผจ.ลค.": 0, "ผจ.สส.": 0, "ผจ.คก.": null}, "has_level": false}, {"row": 34, "is_category": false, "name": "4.2 Academy", "kpi_desc": "Level", "unit": "Progress", "bands": ["ส่งหัวข้ออบรมอย่างน้อยฝ่ายละ 1 เรื่อง", "-", "ดำเนินการอบรมได้ตามแผน", "-", "ผ่านการทดสอบ >= 60%"], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": "วัดใน Functional KPI"}, "scores": {"ผจ.กธ.": 0, "ผจ.วข.": 0, "ผจ.พผ.": 0, "ผจ.บถ.": 0, "ผจ.วม": 0, "ผจ.จห.": 0, "ผจ.ปถ.": 0, "ผจ.ปน.": 0, "ผจ.รส": 0, "ผจ.ขห.": 0, "ผจ.ลค.": 0, "ผจ.สส.": 0, "ผจ.คก.": null}, "has_level": false}, {"row": 35, "is_category": true, "name": "5. ปิด Gap (Asset Intrigity)", "kpi_desc": null, "unit": null, "bands": [null, null, null, null, null], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.004}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0}, "has_level": true}, {"row": 36, "is_category": false, "name": "5.1 Asset Intrigity", "kpi_desc": "ปิด Gap Asset Integrity", "unit": "จำนวน Finding", "bands": [2, 3, 4, 5, 6], "levels": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": null}, "weights": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0.002}, "scores": {"ผจ.กธ.": null, "ผจ.วข.": null, "ผจ.พผ.": null, "ผจ.บถ.": null, "ผจ.วม": null, "ผจ.จห.": null, "ผจ.ปถ.": null, "ผจ.ปน.": null, "ผจ.รส": null, "ผจ.ขห.": null, "ผจ.ลค.": null, "ผจ.สส.": null, "ผจ.คก.": 0}, "has_level": false}], "groups": {"พกก.": ["ผจ.กธ.", "ผจ.วข.", "ผจ.พผ."], "บกก.": ["ผจ.จห.", "ผจ.วม", "ผจ.บถ."], "ปกก.": ["ผจ.ปถ.", "ผจ.ปน.", "ผจ.รส"], "ตกก.": ["ผจ.ขห.", "ผจ.ลค.", "ผจ.สส."]}, "legal_stats": {"total": 1861, "complete": 1063, "on_process": 793, "delay": 0, "month_label": "ตุลาคม"}, "legal_month_docs": [{"desc": "การชำระภาษีบำรุงกรุงเทพมหานคร และ องค์การบริหารส่วนจังหวัด (ทุกเดือน)", "dept": "ตกก.", "count": 1}, {"desc": "ใบอนุญาตประกอบกิจการที่เป็นอันตรายต่อสุขภาพ (อภ.2) – สถานีบริการ", "dept": "ตกก.", "count": 11}, {"desc": "แบบรายงานผลการตรวจวัดและวิเคราะห์สภาวะการทำงานเกี่ยวกับความร้อน แสงสว่าง เสียง (แบบ รสส.1,2,3) - สถานีหลัก", "dept": "ปกก.", "count": 2}, {"desc": "แบบรายงานผลการตรวจวัดและวิเคราะห์สภาวะการทำงานเกี่ยวกับความร้อน แสงสว่าง เสียง (แบบ รสส.1,2,3) - สถานีบริการ", "dept": "ตกก.", "count": 23}, {"desc": "รายงานผลการตรวจวัดและวิเคราะห์ระดับความเข้มข้นของสารเคมีอันตรายในบรรยากาศของสถานที่ทำงานและสถานที่เก็บรักษาสารเคมีอันตราย (สอ.3) - สถานีหลัก", "dept": "ปกก.", "count": 2}, {"desc": "รายงานผลการตรวจวัดและวิเคราะห์ระดับความเข้มข้นของสารเคมีอันตรายในบรรยากาศของสถานที่ทำงานและสถานที่เก็บรักษาสารเคมีอันตราย (สอ.3) - สถานีบริการ", "dept": "ตกก.", "count": 9}]};
+
+/* ---------- helpers ---------- */
+function levelBand(v){
+  if(v===null||v===undefined) return null;
+  if(v<1.5) return 1; if(v<2.5) return 2; if(v<3.5) return 3; if(v<4.5) return 4; return 5;
+}
+const SOLID = {1:'#EE9C9B',2:'#F5BF87',3:'#F2E066',4:'#A6E1B7',5:'#65D998'};
+const SOFT  = {1:'#F9CBC9',2:'#FBE1BE',3:'#FBF4B4',4:'#D8F0DD',5:'#BFF0D6'};
+function pill(v, digits=2){
+  if(v===null||v===undefined) return `<span class="dash">-</span>`;
+  const b = levelBand(v);
+  return `<span class="pill" style="background:${SOLID[b]}">${v.toFixed(digits)}</span>`;
+}
+function fmt(v,d=2){ return (v===null||v===undefined)?'—':Number(v).toFixed(d); }
+function esc(s){ return (s===null||s===undefined)?'':String(s); }
+function fmtInt(v){ return (v===null||v===undefined||v==='') ? '-' : Number(v).toLocaleString('en-US'); }
+function levelBgColor(v){
+  if(v===null||v===undefined||v==='') return '#ffffff';
+  const n = Number(v);
+  if(isNaN(n)) return '#ffffff';
+  const b = levelBand(n);
+  return b ? SOLID[b] : '#ffffff';
+}
+function scoreElId(idx, sn){ return 'sc_' + idx + '_' + sn.replace(/[^a-zA-Z0-9ก-๙]/g,'_'); }
+
+/* =========================================================
+   Excel-style formula engine for the admin table.
+   Any %, Level or score cell can hold either a plain number or
+   a formula starting with "=" that references other cells
+   WITHIN THE SAME SECTION COLUMN, using:
+     W3 / L3 / S3   -> weight / level / score of tier2_rows[3]
+     SUM(W4:W6)     -> range sum
+     SUM(S1,S3,S7)  -> list sum
+     plain + - * / ( ) arithmetic between references and numbers
+   Editing works like Excel: the cell shows the computed value
+   normally, and shows the raw formula text while it's focused.
+   This operates on a draft copy of the data (ADMIN_DRAFT) so
+   "ยกเลิก" (Cancel) can discard edits cleanly.
+   ========================================================= */
+let ADMIN_DRAFT = null;   // deep-cloned working copy of tier2_rows while the panel is open
+let ADMIN_CHART_DRAFT = null; // deep-cloned working copy of chart_overrides while the panel is open
+let ADMIN_LEGAL_DRAFT = null; // deep-cloned working copy of {stats, docs} for the Legal and compliance page while the panel is open
+let ADMIN_EXTRA_CHARTS_DRAFT = null; // deep-cloned working copy of report_overrides.extraCharts (per page, admin-added custom charts) while the panel is open
+let ADMIN_SECTIONS = [];
+let TABLE_VIEW_MODE = true; // true = clean read-only text (default), false = editable formula cells
+const BAND_LABELS = ["ต่ำมาก","ต่ำ","ปกติ","ดี","ดีมาก"];
+const BAND_COLORS = ["#F4A9A4","#F7CBA0","#FCEB6B","#B8E8C8","#7BDDA3"];
+const BAND_BG_LIGHT = ["#FBEAE9","#FCEEE0","#FDF6D0","#E3F3E7","#D8F3E3"]; // opaque pastel versions for sticky cell backgrounds — must stay fully opaque or scrolled content bleeds through
+
+function isFormula(v){ return typeof v === 'string' && v.trim().startsWith('='); }
+
+function cellElId(field, idx, sn){ return 'cell_' + field + '_' + idx + '_' + sn; }
+
+/* The "%" column is stored and computed internally as a plain fraction
+   (0.05 = 5%) so formulas like =W4*L4 work without any manual "/100" —
+   it's only converted to/from the percent number typed and shown on
+   screen at the very edges (display + when the admin types a plain
+   number into a % box). Formula text itself is unit-agnostic and is
+   never converted. */
+function toDisplayUnits(field, rawVal){
+  if(rawVal===null||rawVal===undefined||isNaN(rawVal)) return null;
+  return field==='w' ? rawVal*100 : rawVal;
+}
+function fromDisplayUnits(field, displayVal){
+  if(displayVal===null||displayVal===undefined||isNaN(displayVal)) return null;
+  return field==='w' ? displayVal/100 : displayVal;
+}
+
+function getCellRaw(idx, field, sn){
+  const row = ADMIN_DRAFT[idx];
+  if(!row) return null;
+  if(row.formulas && row.formulas[sn] && row.formulas[sn][field] !== undefined && row.formulas[sn][field] !== null && row.formulas[sn][field] !== ''){
+    return row.formulas[sn][field];
+  }
+  const store = field==='w' ? row.weights : field==='l' ? row.levels : row.scores;
+  return store ? (store[sn] ?? null) : null;
+}
+function setCellRaw(idx, field, sn, raw){
+  const row = ADMIN_DRAFT[idx];
+  if(!row) return;
+  if(!row.formulas) row.formulas = {};
+  if(!row.formulas[sn]) row.formulas[sn] = {};
+  if(isFormula(raw)){
+    row.formulas[sn][field] = raw;
+  } else {
+    delete row.formulas[sn][field];
+    const store = field==='w' ? (row.weights||(row.weights={})) : field==='l' ? row.levels : (row.scores||(row.scores={}));
+    const n = (raw===''||raw===null||raw===undefined) ? null : Number(raw);
+    store[sn] = (n===null || isNaN(n)) ? null : fromDisplayUnits(field, n); // the box shows/accepts %, storage keeps a fraction
+  }
+}
+function resolveCellValue(idx, field, sn, visiting){
+  visiting = visiting || new Set();
+  const key = field+'_'+idx;
+  if(visiting.has(key)) return null; // circular reference guard
+  visiting = new Set(visiting); visiting.add(key);
+  const raw = getCellRaw(idx, field, sn);
+  if(raw===null || raw===undefined || raw==='') return null;
+  if(isFormula(raw)) return evalFormulaExpr(raw.slice(1), sn, visiting);
+  const n = Number(raw);
+  return isNaN(n) ? null : n; // already a fraction for 'w' — formulas can reference it directly, no /100 needed
+}
+function evalFormulaExpr(expr, sn, visiting){
+  let e = expr.toUpperCase();
+  e = e.replace(/SUM\(([^)]+)\)/g, (m, inner)=>{
+    const toks = [];
+    inner.split(',').forEach(part=>{
+      part = part.trim();
+      const range = part.match(/^([WLS])(\d+):([WLS])(\d+)$/);
+      if(range){
+        const f = range[1].toLowerCase(), a = +range[2], b = +range[4];
+        for(let i=Math.min(a,b); i<=Math.max(a,b); i++) toks.push(f+i);
+      } else {
+        const single = part.match(/^([WLS])(\d+)$/);
+        if(single) toks.push(single[1].toLowerCase()+single[2]);
+      }
+    });
+    let sum = 0;
+    toks.forEach(tok=>{
+      const f = tok[0], i = +tok.slice(1);
+      sum += (resolveCellValue(i, f, sn, visiting) || 0);
+    });
+    return sum;
+  });
+  e = e.replace(/([WLS])(\d+)/g, (m, f, i)=>{
+    const v = resolveCellValue(+i, f.toLowerCase(), sn, visiting);
+    return (v===null||v===undefined) ? 0 : v;
+  });
+  if(!/^[0-9+\-*/(). ]*$/.test(e)) return null; // reject anything that isn't safe arithmetic
+  try{ const r = Function('return (' + e + ')')(); return isFinite(r) ? r : null; }catch(err){ return null; }
+}
+
+function refreshCellDisplay(idx, field, sn){
+  const el = document.getElementById(cellElId(field, idx, sn));
+  if(!el || document.activeElement === el) return; // never clobber the cell the user is actively typing in
+  const val = resolveCellValue(idx, field, sn);
+  const dv = toDisplayUnits(field, val);
+  el.value = (dv===null||dv===undefined) ? '' : Number(dv).toFixed(field==='s' ? 4 : 2);
+  if(field==='l') el.style.background = levelBgColor(val);
+  el.classList.toggle('is-formula', isFormula(getCellRaw(idx, field, sn)));
+}
+function recomputeSectionColumn(sn){
+  ADMIN_DRAFT.forEach((row, idx)=>{
+    ['w','l','s'].forEach(field=> refreshCellDisplay(idx, field, sn));
+  });
+}
+function onFormulaCellFocus(idx, field, sn){
+  const el = document.getElementById(cellElId(field, idx, sn));
+  if(!el) return;
+  const raw = getCellRaw(idx, field, sn);
+  if(raw===null || raw===undefined){ el.value = ''; return; }
+  if(isFormula(raw)){ el.value = raw; return; } // formula text is shown verbatim, unit-agnostic
+  const dv = toDisplayUnits(field, Number(raw));
+  el.value = (dv===null||dv===undefined) ? '' : String(Math.round(dv*10000)/10000);
+}
+function onFormulaCellBlur(idx, field, sn){
+  const el = document.getElementById(cellElId(field, idx, sn));
+  if(!el) return;
+  setCellRaw(idx, field, sn, el.value.trim());
+  recomputeSectionColumn(sn);
+}
+
+/* ---------- section-3 table: builds either the editable (formula) view
+   or a clean read-only text view, based on TABLE_VIEW_MODE ---------- */
+function formulaCellEditHtml(idx, field, sn, width){
+  const val = resolveCellValue(idx, field, sn);
+  const dv = toDisplayUnits(field, val);
+  const raw = getCellRaw(idx, field, sn);
+  const decimals = field==='s' ? 4 : 2;
+  const shown = (dv===null||dv===undefined) ? '' : Number(dv).toFixed(decimals);
+  const bg = field==='l' ? `background:${levelBgColor(val)};` : '';
+  const isF = isFormula(raw);
+  const jsSn = esc(sn).replace(/'/g,"\\'");
+  return `<input type="text" class="formula-cell${isF?' is-formula':''}" style="width:${width}px;${bg}"
+    id="${cellElId(field, idx, sn)}" value="${esc(shown)}"
+    title="${isF ? 'สูตร: '+esc(raw) : ''}"
+    onfocus="onFormulaCellFocus(${idx},'${field}','${jsSn}')"
+    onblur="onFormulaCellBlur(${idx},'${field}','${jsSn}')">`;
+}
+function formulaCellTextHtml(idx, field, sn){
+  const val = resolveCellValue(idx, field, sn);
+  const dv = toDisplayUnits(field, val);
+  const raw = getCellRaw(idx, field, sn);
+  const decimals = field==='s' ? 4 : 2;
+  const shown = (dv===null||dv===undefined) ? '-' : Number(dv).toFixed(decimals);
+  const isF = isFormula(raw);
+  const bg = field==='l' ? `background:${levelBgColor(val)};` : '';
+  const cls = isF ? 'view-cell is-formula' : 'view-cell';
+  const title = isF ? ` title="สูตร: ${esc(raw)}"` : '';
+  return `<div class="${cls}" style="${bg}"${title}>${esc(shown)}</div>`;
+}
+
+function onTextFieldBlur(idx, field, el){
+  const row = ADMIN_DRAFT[idx];
+  if(!row) return;
+  if(field==='name') row.name = el.value;
+  else if(field==='kpi_desc') row.kpi_desc = el.value==='' ? null : el.value;
+  else if(field==='unit') row.unit = el.value==='' ? null : el.value;
+}
+function onBandBlur(idx, bandIdx, el){
+  const row = ADMIN_DRAFT[idx];
+  if(!row) return;
+  if(!row.bands) row.bands = [null,null,null,null,null];
+  row.bands[bandIdx] = el.value==='' ? null : el.value;
+}
+
+/* =========================================================
+   Admin editing for the 6 static "report card" pages
+   (Q Performance, Safety-Occ Health, Security, Environmental
+   x2, Legal). Reads current box content straight off the
+   already-rendered deck (data-box-id put there by ragBox()),
+   so there's no separate content manifest to keep in sync —
+   edits are read back from the form DOM directly at save time.
+   ========================================================= */
+const REPORT_PAGE_NAMES = {
+  qperf: 'Q Performance 2026',
+  safety: 'Safety-Occupational Health Performance 2026',
+  security: 'Security Performance 2026',
+  env1: 'Environmental Performance 2026 (Spill + GHG)',
+  env2: 'Environmental Performance 2026 (Waste to Landfill)',
+  legal: 'Legal and compliance 2026',
+};
+function rowEditorHtml(label, value){
+  return `<div class="rp-row" style="display:grid; grid-template-columns:110px 1fr auto; gap:6px; margin-bottom:4px; align-items:start;">
+    <input type="text" class="rp-row-label" value="${esc(label)}" placeholder="ป้ายกำกับ" style="font-weight:600; padding:4px 6px; border:1px solid #d1d5db; border-radius:5px; font-size:11.5px;">
+    <textarea rows="2" class="rp-row-value" style="font-size:11.5px; padding:4px 6px; border:1px solid #d1d5db; border-radius:5px; width:100%; box-sizing:border-box;">${esc(value)}</textarea>
+    <button type="button" class="rp-del-row" title="ลบแถว" style="color:#b91c1c; background:none; border:none; cursor:pointer; font-size:14px;">✕</button>
+  </div>`;
+}
+// Which box each predefined chart visually sits under on the live page
+// (matches the exact box+chart order in buildSlides for qperf/env1) — used
+// so the admin editor mirrors the real page layout instead of grouping all
+// of a page's charts together at the end.
+const BOX_CHART_MAP = { qperf_box0:'coreProcess', qperf_box3:'qsheTalk', qperf_box4:'fiveS', qperf_box5:'pic', env1_box3:'ghg' };
+function chartPickerHtml(boxId, currentKey){
+  const options = Object.keys(CHART_DEFAULTS).filter(k=>k!=='legalMonthly' && k!=='legalDept'); // legal's charts stay in the Legal section, not offered here
+  return `<div class="rp-chart-picker" style="margin-top:6px;">
+    <select class="rp-chart-select" style="font-size:11px; padding:4px 6px; border:1px solid #d1d5db; border-radius:5px;">
+      <option value="">— เลือกกราฟที่จะแสดงตรงนี้ —</option>
+      ${options.map(k=>`<option value="${k}" ${k===currentKey?'selected':''}>${esc(CHART_TITLES[k]||k)}</option>`).join('')}
+    </select>
+    <button type="button" class="rp-chart-add" style="font-size:11px; color:#1B2A6B; background:none; border:1px dashed #9CC9F5; border-radius:6px; padding:3px 8px; cursor:pointer; margin-left:4px;">+ กราฟ</button>
+    <div class="rp-chart-slot"></div>
+  </div>`;
+}
+function renderBoxEditorHtml(boxId, color, title, rows){
+  const rowsHtml = rows.map(r=>rowEditorHtml(r.label, r.value)).join('');
+  const matchedChart = boxId ? BOX_CHART_MAP[boxId] : null;
+  return `<div class="rp-box" ${boxId?`data-box-id="${esc(boxId)}"`:''} style="border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin-bottom:8px; background:#fafafa;">
+    <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">
+      <input type="text" class="rp-title" value="${esc(title)}" placeholder="ชื่อหัวข้อกล่อง" style="flex:1; font-weight:700; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px;">
+      <select class="rp-color" style="padding:5px; border:1px solid #d1d5db; border-radius:5px;">
+        ${['green','red','yellow','blue','gray'].map(c=>`<option value="${c}" ${c===color?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <button type="button" class="rp-del-box" title="ลบกล่องนี้" style="color:#b91c1c; background:none; border:none; cursor:pointer; font-size:16px;">🗑</button>
+    </div>
+    <div class="rp-rows">${rowsHtml}</div>
+    <button type="button" class="rp-add-row" style="font-size:11px; color:#1B2A6B; background:none; border:1px dashed #9CC9F5; border-radius:6px; padding:3px 8px; cursor:pointer; margin-top:4px;">+ เพิ่มแถว</button>
+    ${matchedChart ? `<div style="margin-top:8px;">${chartEditorHtml(matchedChart)}</div>` : chartPickerHtml(boxId, null)}
+  </div>`;
+}
+function wireRowButtons(rowEl){
+  rowEl.querySelector('.rp-del-row').addEventListener('click', function(){ rowEl.remove(); });
+}
+function wireChartPicker(boxEl){
+  const picker = boxEl.querySelector('.rp-chart-picker');
+  if(!picker) return;
+  const select = picker.querySelector('.rp-chart-select');
+  const addBtn = picker.querySelector('.rp-chart-add');
+  const slot = picker.querySelector('.rp-chart-slot');
+  addBtn.addEventListener('click', function(){
+    const key = select.value;
+    if(!key){ showAdminToast('เลือกกราฟก่อนกดปุ่ม + กราฟ'); return; }
+    slot.innerHTML = chartEditorHtml(key);
+    addBtn.disabled = true; select.disabled = true;
+  });
+}
+function wireBoxButtons(boxEl){
+  boxEl.querySelector('.rp-del-box').addEventListener('click', function(){ boxEl.remove(); });
+  boxEl.querySelector('.rp-add-row').addEventListener('click', function(){
+    const rowsWrap = boxEl.querySelector('.rp-rows');
+    rowsWrap.insertAdjacentHTML('beforeend', rowEditorHtml('', ''));
+    wireRowButtons(rowsWrap.lastElementChild);
+  });
+  boxEl.querySelectorAll('.rp-row').forEach(wireRowButtons);
+  wireChartPicker(boxEl);
+}
+function renderReportPagesSection(){
+  const wrap = document.getElementById('reportPagesWrap');
+  if(!wrap) return;
+  const boxes = Array.from(document.querySelectorAll('#stage .rag-box[data-box-id]'));
+  const byPage = {};
+  boxes.forEach(el=>{
+    const boxId = el.dataset.boxId;
+    const pageKey = boxId.split('_box')[0];
+    if(!byPage[pageKey]) byPage[pageKey] = [];
+    const color = ['green','red','yellow','blue','gray'].find(c=>el.classList.contains(c)) || 'blue';
+    const titleEl = el.querySelector('.rag-head');
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const rows = Array.from(el.querySelectorAll('.rag-row')).map(rEl=>{
+      const labelEl = rEl.querySelector('.rlabel');
+      const valEl = rEl.querySelector('.rval');
+      const label = labelEl ? labelEl.textContent.trim() : '';
+      const value = valEl ? valEl.innerHTML.replace(/<br\s*\/?>/gi,'\n') : '';
+      return { label, value };
+    });
+    byPage[pageKey].push({ boxId, color, title, rows });
+  });
+
+  const extraData = (currentData && currentData.report_overrides && currentData.report_overrides.extra) || {};
+
+  let html = '';
+  Object.keys(REPORT_PAGE_NAMES).forEach(pageKey=>{
+    const list = byPage[pageKey] || [];
+    const extra = extraData[pageKey] || [];
+    const extraCharts = ADMIN_EXTRA_CHARTS_DRAFT[pageKey] || [];
+    html += `<div class="rp-page" data-page-key="${pageKey}">
+      <h5 style="font-family:'Kanit'; font-size:13.5px; color:#1B2A6B; margin:14px 0 8px; border-bottom:1px solid #DCEEFB; padding-bottom:4px;">${esc(REPORT_PAGE_NAMES[pageKey])}</h5>
+      <div class="rp-boxes">`;
+    list.forEach(b => {
+      html += renderBoxEditorHtml(b.boxId, b.color, b.title, b.rows);
+    });
+    extra.forEach(b => html += renderBoxEditorHtml(null, b.color||'blue', b.title||'', b.rows||[]));
+    html += `</div><button type="button" class="ap-btn secondary rp-add-box" style="margin:0 8px 16px 0;">+ เพิ่มกล่องใหม่ในหน้านี้</button><button type="button" class="ap-btn secondary rp-add-chart" data-page-key="${pageKey}" style="margin:0 0 16px; background:#C23E8F; color:#fff;">+ กราฟ</button>`;
+    if(extraCharts.length){
+      html += `<div style="margin-bottom:16px;">${extraCharts.map((ch,i)=>extraChartEditorHtml(pageKey,i)).join('')}</div>`;
+    }
+    html += `</div>`;
+  });
+  if(!boxes.length){
+    html += `<p class="ap-note">⚠ ไม่พบกล่องข้อมูลในสไลด์ปัจจุบัน (อาจยังโหลดสไลด์ไม่เสร็จ) ลองปิดแล้วเปิดแผงแอดมินใหม่</p>`;
+  }
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.rp-box').forEach(wireBoxButtons);
+  wrap.querySelectorAll('.rp-add-box').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const boxesWrap = this.closest('.rp-page').querySelector('.rp-boxes');
+      boxesWrap.insertAdjacentHTML('beforeend', renderBoxEditorHtml(null, 'blue', '', [{label:'Target',value:''},{label:'Result',value:''}]));
+      wireBoxButtons(boxesWrap.lastElementChild);
+    });
+  });
+  wrap.querySelectorAll('.rp-add-chart').forEach(btn=>{
+    btn.addEventListener('click', function(){ addExtraChart(this.dataset.pageKey); });
+  });
+}
+function collectReportPagesOverrides(){
+  const wrap = document.getElementById('reportPagesWrap');
+  const result = { boxes: {}, extra: {} };
+  if(!wrap) return result;
+  wrap.querySelectorAll('.rp-page').forEach(pageEl=>{
+    const pageKey = pageEl.dataset.pageKey;
+    const extraList = [];
+    pageEl.querySelectorAll('.rp-box').forEach(boxEl=>{
+      const title = boxEl.querySelector('.rp-title').value;
+      const color = boxEl.querySelector('.rp-color').value;
+      const rows = Array.from(boxEl.querySelectorAll('.rp-row')).map(rowEl=>({
+        label: esc(rowEl.querySelector('.rp-row-label').value),
+        value: esc(rowEl.querySelector('.rp-row-value').value).replace(/\n/g, '<br>'),
+      }));
+      const boxId = boxEl.dataset.boxId;
+      if(boxId){
+        result.boxes[boxId] = { color, title: esc(title), rows };
+      } else {
+        extraList.push({ color, title: esc(title), rows });
+      }
+    });
+    if(extraList.length) result.extra[pageKey] = extraList;
+  });
+  return result;
+}
+
+/* ---------- Section 5: editable data for the mini charts ---------- */
+function chartCellId(key, kind, row, col){ return 'chd_'+key+'_'+kind+'_'+row+'_'+col; }
+function onChartLabelBlur(key, i, el){ ADMIN_CHART_DRAFT[key].labels[i] = el.value; }
+function onChartValueBlur(key, dsIdx, i, el){
+  const v = el.value.trim();
+  ADMIN_CHART_DRAFT[key].datasets[dsIdx].data[i] = v==='' ? null : Number(v);
+}
+// (per-box chart placement is handled by BOX_CHART_MAP + chartPickerHtml inside renderBoxEditorHtml, above)
+function chartEditorHtml(key){
+  const cd = ADMIN_CHART_DRAFT[key];
+  const labelCells = cd.labels.map((lbl,i)=>
+    `<td><input type="text" value="${esc(lbl)}" style="width:64px; padding:3px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; text-align:center;" onblur="onChartLabelBlur('${key}',${i},this)"></td>`
+  ).join('');
+  const dsRows = cd.datasets.map((ds,dsIdx)=>{
+    const cells = ds.data.map((v,i)=>
+      `<td><input type="text" value="${v===null||v===undefined?'':v}" style="width:64px; padding:3px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; text-align:center;" onblur="onChartValueBlur('${key}',${dsIdx},${i},this)"></td>`
+    ).join('');
+    return `<tr><td style="font-weight:700; font-size:11.5px; padding:4px 8px; white-space:nowrap; background:#EAF4FD;">${esc(ds.label)}</td>${cells}</tr>`;
+  }).join('');
+  return `<details style="margin-bottom:8px;">
+    <summary style="cursor:pointer; font-weight:700; color:#1B2A6B; padding:7px 10px; background:#EAF4FD; border-radius:6px;">📊 กราฟ: ${esc(CHART_TITLES[key]||key)}</summary>
+    <div class="ap-scrollx" style="margin-top:8px;"><table class="ap-table" style="font-size:11px;">
+      <tr><td style="font-weight:700; font-size:11.5px; padding:4px 8px; white-space:nowrap;">หมวด</td>${labelCells}</tr>
+      ${dsRows}
+    </table></div>
+  </details>`;
+}
+
+/* ---------- admin-added custom charts (the "+ กราฟ" feature) ----------
+   These are entirely admin-defined: title, category labels, and one or
+   more data series, stored per page in report_overrides.extraCharts.
+   They always render via the dependency-free fallback bar renderer (same
+   one used when Chart.js can't load) — simplest, and needs no Chart.js
+   config of its own since the admin can add any number of categories or
+   series without knowing chart-type mechanics. */
+function addExtraChart(pageKey){
+  ADMIN_EXTRA_CHARTS_DRAFT[pageKey].push({
+    title: 'กราฟใหม่',
+    labels: ['A','B','C'],
+    datasets: [{ label:'ชุดข้อมูล 1', data:[0,0,0] }],
+  });
+  renderReportPagesSection();
+  showAdminToast('เพิ่มกราฟใหม่แล้ว — แก้ชื่อ/หมวด/ตัวเลขได้ทันที');
+}
+function removeExtraChart(pageKey, idx){
+  if(!confirm('ลบกราฟ "'+(ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx].title||'')+'" ใช่หรือไม่?')) return;
+  ADMIN_EXTRA_CHARTS_DRAFT[pageKey].splice(idx, 1);
+  renderReportPagesSection();
+  showAdminToast('ลบกราฟแล้ว');
+}
+function onExtraChartTitleBlur(pageKey, idx, el){ ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx].title = el.value; }
+function onExtraChartLabelBlur(pageKey, idx, labelIdx, el){ ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx].labels[labelIdx] = el.value; }
+function onExtraChartValueBlur(pageKey, idx, dsIdx, pointIdx, el){
+  const v = el.value.trim();
+  ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx].datasets[dsIdx].data[pointIdx] = v === '' ? null : Number(v);
+}
+function onExtraChartDsLabelBlur(pageKey, idx, dsIdx, el){ ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx].datasets[dsIdx].label = el.value; }
+function addExtraChartPoint(pageKey, idx){
+  const ch = ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx];
+  ch.labels.push('หมวดใหม่');
+  ch.datasets.forEach(ds=> ds.data.push(0));
+  renderReportPagesSection();
+}
+function removeExtraChartPoint(pageKey, idx, pointIdx){
+  const ch = ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx];
+  if(ch.labels.length <= 1){ showAdminToast('ต้องมีอย่างน้อย 1 หมวด'); return; }
+  ch.labels.splice(pointIdx, 1);
+  ch.datasets.forEach(ds=> ds.data.splice(pointIdx, 1));
+  renderReportPagesSection();
+}
+function addExtraChartDataset(pageKey, idx){
+  const ch = ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx];
+  ch.datasets.push({ label:'ชุดข้อมูล '+(ch.datasets.length+1), data: ch.labels.map(()=>0) });
+  renderReportPagesSection();
+}
+function removeExtraChartDataset(pageKey, idx, dsIdx){
+  const ch = ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx];
+  if(ch.datasets.length <= 1){ showAdminToast('ต้องมีอย่างน้อย 1 ชุดข้อมูล'); return; }
+  ch.datasets.splice(dsIdx, 1);
+  renderReportPagesSection();
+}
+function extraChartEditorHtml(pageKey, idx){
+  const ch = ADMIN_EXTRA_CHARTS_DRAFT[pageKey][idx];
+  const labelCells = ch.labels.map((lbl,i)=>`<td>
+    <input type="text" value="${esc(lbl)}" style="width:60px; padding:3px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; text-align:center;" onblur="onExtraChartLabelBlur('${pageKey}',${idx},${i},this)">
+    <button type="button" title="ลบหมวดนี้" onclick="removeExtraChartPoint('${pageKey}',${idx},${i})" style="border:none; background:none; color:#B3261E; cursor:pointer; font-size:10px;">✕</button>
+  </td>`).join('');
+  const dsRows = ch.datasets.map((ds,dsIdx)=>{
+    const cells = ds.data.map((v,i)=>
+      `<td><input type="text" value="${v===null||v===undefined?'':v}" style="width:60px; padding:3px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; text-align:center;" onblur="onExtraChartValueBlur('${pageKey}',${idx},${dsIdx},${i},this)"></td>`
+    ).join('');
+    return `<tr><td style="white-space:nowrap; background:#EAF4FD; padding:2px 4px;">
+        <input type="text" value="${esc(ds.label)}" style="width:100px; padding:3px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; font-weight:700;" onblur="onExtraChartDsLabelBlur('${pageKey}',${idx},${dsIdx},this)">
+        <button type="button" title="ลบชุดข้อมูลนี้" onclick="removeExtraChartDataset('${pageKey}',${idx},${dsIdx})" style="border:none; background:none; color:#B3261E; cursor:pointer; font-size:10px;">✕</button>
+      </td>${cells}</tr>`;
+  }).join('');
+  return `<div class="rp-chart-box" style="border:1px dashed #C23E8F; background:#FEF3F9; border-radius:8px; padding:10px; margin-bottom:8px;">
+    <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">
+      <span style="font-size:12px;">📊</span>
+      <input type="text" value="${esc(ch.title)}" placeholder="ชื่อกราฟ" style="flex:1; font-weight:700; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px;" onblur="onExtraChartTitleBlur('${pageKey}',${idx},this)">
+      <button type="button" title="ลบกราฟนี้" onclick="removeExtraChart('${pageKey}',${idx})" style="color:#b91c1c; background:none; border:none; cursor:pointer; font-size:16px;">🗑</button>
+    </div>
+    <div class="ap-scrollx"><table class="ap-table" style="font-size:11px;">
+      <tr><td style="font-weight:700; font-size:11px; padding:4px 8px; white-space:nowrap;">หมวด</td>${labelCells}</tr>
+      ${dsRows}
+    </table></div>
+    <div style="display:flex; gap:6px; margin-top:6px;">
+      <button type="button" onclick="addExtraChartPoint('${pageKey}',${idx})" style="font-size:11px; color:#1B2A6B; background:none; border:1px dashed #9CC9F5; border-radius:6px; padding:3px 8px; cursor:pointer;">+ หมวด</button>
+      <button type="button" onclick="addExtraChartDataset('${pageKey}',${idx})" style="font-size:11px; color:#1B2A6B; background:none; border:1px dashed #9CC9F5; border-radius:6px; padding:3px 8px; cursor:pointer;">+ ชุดข้อมูล</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- Section 6: Legal and compliance page (summary numbers + monthly doc list) ---------- */
+function onLegalStatBlur(field, el){
+  if(field === 'month_label'){ ADMIN_LEGAL_DRAFT.stats.month_label = el.value; return; }
+  const v = el.value.trim();
+  ADMIN_LEGAL_DRAFT.stats[field] = v === '' ? null : Number(v);
+}
+function onLegalDocBlur(idx, field, el){
+  const doc = ADMIN_LEGAL_DRAFT.docs[idx];
+  if(!doc) return;
+  if(field === 'count'){
+    const v = el.value.trim();
+    doc.count = v === '' ? null : Number(v);
+  } else {
+    doc[field] = el.value;
+  }
+}
+function addLegalDoc(afterIdx){
+  ADMIN_LEGAL_DRAFT.docs.splice(afterIdx+1, 0, { desc:'เอกสารใหม่', dept:'', count:0 });
+  renderLegalStatsSection();
+  showAdminToast('เพิ่มแถวเอกสารใหม่แล้ว');
+}
+function removeLegalDoc(idx){
+  if(!confirm('ลบแถวเอกสาร "'+(ADMIN_LEGAL_DRAFT.docs[idx].desc||'')+'" ใช่หรือไม่?')) return;
+  ADMIN_LEGAL_DRAFT.docs.splice(idx, 1);
+  renderLegalStatsSection();
+  showAdminToast('ลบแถวแล้ว');
+}
+function renderLegalStatsSection(){
+  const wrap = document.getElementById('legalStatsWrap');
+  if(!wrap) return;
+  const st = ADMIN_LEGAL_DRAFT.stats;
+  const statField = (label, field, bg) => `
+    <div style="background:${bg}; border-radius:6px; padding:8px 10px;">
+      <div style="font-size:11px; font-weight:700; color:#51607A; margin-bottom:4px;">${label}</div>
+      <input type="text" value="${esc(st[field])}" style="width:100%; padding:5px 7px; border:1px solid #d1d5db; border-radius:5px; font-size:13px; font-weight:700; box-sizing:border-box;" onblur="onLegalStatBlur('${field}',this)">
+    </div>`;
+  const docRows = ADMIN_LEGAL_DRAFT.docs.map((d,idx)=>`
+    <tr>
+      <td style="width:26px; text-align:center; color:#51607A;">${idx+1}</td>
+      <td><textarea rows="2" style="width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #d1d5db; border-radius:5px; font-size:11.5px; font-family:'IBM Plex Sans Thai',sans-serif; resize:vertical;" onblur="onLegalDocBlur(${idx},'desc',this)">${esc(d.desc)}</textarea></td>
+      <td style="width:70px;"><input type="text" value="${esc(d.dept)}" style="width:100%; box-sizing:border-box; padding:5px 6px; border:1px solid #d1d5db; border-radius:5px; font-size:12px; text-align:center;" onblur="onLegalDocBlur(${idx},'dept',this)"></td>
+      <td style="width:60px;"><input type="text" value="${esc(d.count)}" style="width:100%; box-sizing:border-box; padding:5px 6px; border:1px solid #d1d5db; border-radius:5px; font-size:12px; text-align:center;" onblur="onLegalDocBlur(${idx},'count',this)"></td>
+      <td style="width:64px; white-space:nowrap;">
+        <button type="button" title="เพิ่มแถวใหม่ต่อจากแถวนี้" onclick="addLegalDoc(${idx})" style="border:1px solid #A6C8ED; background:#EAF4FD; color:#1B2A6B; border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:13px; font-weight:700;">＋</button>
+        <button type="button" title="ลบแถวนี้" onclick="removeLegalDoc(${idx})" style="border:1px solid #F5B3AE; background:#FDEAEA; color:#B3261E; border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:12px; margin-left:2px;">🗑</button>
+      </td>
+    </tr>`).join('');
+  wrap.innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
+      ${statField('Total', 'total', '#E3E5E8')}
+      ${statField('Total complete', 'complete', '#DFF7E9')}
+      ${statField('On process', 'on_process', '#DDF0FB')}
+      ${statField('Delay', 'delay', '#FBE3E1')}
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px; font-weight:700; color:#51607A; display:block; margin-bottom:4px;">ชื่อเดือน (แสดงในหัวข้อ "จำนวนรายการเอกสาร...ของเดือน___")</label>
+      <input type="text" value="${esc(st.month_label)}" placeholder="เช่น ตุลาคม" style="width:220px; padding:6px 9px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;" onblur="onLegalStatBlur('month_label',this)">
+    </div>
+    <div class="ap-scrollx"><table class="ap-table" style="font-size:11.5px;">
+      <tr><th style="width:26px;">ลำดับ</th><th style="text-align:left;">เอกสารที่ต้องดำเนินตามกฎหมาย</th><th style="width:70px;">ฝ่าย</th><th style="width:60px;">จำนวน</th><th style="width:64px;">จัดการ</th></tr>
+      ${docRows}
+    </table></div>
+    <button type="button" onclick="addLegalDoc(${ADMIN_LEGAL_DRAFT.docs.length-1})" style="margin-top:8px; border:1px solid #A6C8ED; background:#EAF4FD; color:#1B2A6B; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12.5px; font-weight:700;">＋ เพิ่มแถวเอกสารใหม่ท้ายตาราง</button>`;
+}
+
+function renderLegalChartsSection(){
+  const wrap = document.getElementById('legalChartsWrap');
+  if(!wrap) return;
+  wrap.innerHTML = chartEditorHtml('legalMonthly') + chartEditorHtml('legalDept');
+}
+
+/* Sticky ("frozen") columns on the left of the big QSHE Index table:
+   row #, KPI Name, KPI, หน่วยวัด, and the 5 Target bands stay visible
+   while scrolling right through the 13 sections. */
+const FROZEN_COL_LEFT = { idx: 0, actions: 40, name: 104, kpi: 274, unit: 494, band0: 584, band1: 704, band2: 824, band3: 944, band4: 1064 };
+const FROZEN_COL_WIDTH = { idx: 40, actions: 64, name: 170, kpi: 220, unit: 90, band0: 120, band1: 120, band2: 120, band3: 120, band4: 120 };
+function frozenStyle(key){
+  return `position:sticky; left:${FROZEN_COL_LEFT[key]}px; min-width:${FROZEN_COL_WIDTH[key]}px; z-index:3;`;
+}
+
+/* Shift every W{n}/L{n}/S{n} formula reference in the whole table when a
+   row is inserted or removed at `atIndex`, so existing formulas (both
+   auto-seeded category totals and anything the admin typed by hand) keep
+   pointing at the same logical rows instead of silently drifting. */
+function shiftFormulaRefs(rows, atIndex, delta){
+  rows.forEach(row=>{
+    if(!row.formulas) return;
+    Object.keys(row.formulas).forEach(sn=>{
+      const f = row.formulas[sn];
+      ['w','l','s'].forEach(field=>{
+        const val = f[field];
+        if(typeof val !== 'string' || !val.startsWith('=')) return;
+        f[field] = val.replace(/([WLS])(\d+)/g, (m, letter, numStr)=>{
+          let n = parseInt(numStr, 10);
+          if(delta > 0){ if(n >= atIndex) n += delta; }
+          else { if(n > atIndex) n += delta; } // exact refs to a just-removed row are left as-is (rare edge case) rather than guessed at
+          return letter + n;
+        });
+      });
+    });
+  });
+}
+function addTier2Row(afterIdx){
+  const src = ADMIN_DRAFT[afterIdx];
+  const blank = {
+    is_category: false,
+    name: '', // left blank on purpose: a blank name reads as "continues the item above" (like the existing unnumbered rows in the data) — type a number + title here (e.g. "3.11 New Metric") to make it its own separate numbered item instead
+    kpi_desc: '', unit: '',
+    bands: [null,null,null,null,null],
+    levels: {}, weights: {}, scores: {}, formulas: {},
+    has_level: true,
+  };
+  const insertAt = afterIdx + 1;
+  ADMIN_DRAFT.splice(insertAt, 0, blank);
+  shiftFormulaRefs(ADMIN_DRAFT, insertAt, +1);
+  seedDefaultCategoryFormulas(ADMIN_DRAFT, true);
+  renderTier2Table();
+  showAdminToast('เพิ่มแถวแล้ว (ยังไม่มีชื่อ = นับเป็นข้อย่อยต่อเนื่อง) — พิมพ์ชื่อพร้อมเลขข้อ เช่น "3.11 ..." ถ้าต้องการให้เป็นข้อใหม่แยกต่างหาก');
+}
+function removeTier2Row(idx){
+  const row = ADMIN_DRAFT[idx];
+  if(!row || row.is_category){ showAdminToast('ลบแถวหมวดหมู่หลักไม่ได้ — ลบได้เฉพาะแถวรายการย่อย'); return; }
+  if(!confirm('ลบแถว "'+(row.name||'')+'" ใช่หรือไม่?')) return;
+  ADMIN_DRAFT.splice(idx, 1);
+  shiftFormulaRefs(ADMIN_DRAFT, idx, -1);
+  seedDefaultCategoryFormulas(ADMIN_DRAFT, true);
+  renderTier2Table();
+  showAdminToast('ลบแถวแล้ว');
+}
+function showAdminToast(msg){
+  let t = document.getElementById('apToast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'apToast';
+    t.style.cssText = 'position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#1B2A6B; color:#fff; padding:9px 18px; border-radius:8px; font-size:13px; z-index:999; box-shadow:0 4px 14px rgba(0,0,0,.25); opacity:0; transition:opacity .2s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.style.opacity = '0'; }, 2000);
+}
+
+function renderTier2Table(){
+  const wrap = document.getElementById('tier2TableWrap');
+  const toggleBtn = document.getElementById('apTableModeToggle');
+  if(!wrap) return;
+  toggleBtn.textContent = TABLE_VIEW_MODE ? '✏️ แก้ไขตาราง' : '✅ เสร็จสิ้น (แสดงเป็นข้อความ)';
+
+  const cell = TABLE_VIEW_MODE ? formulaCellTextHtml : (idx,field,sn)=>formulaCellEditHtml(idx,field,sn, field==='w'?42:field==='l'?46:54);
+  const textField = (idx, field, value, extraStyle) => TABLE_VIEW_MODE
+    ? `<div class="view-cell" style="text-align:left;${extraStyle||''}">${esc(value)||'&nbsp;'}</div>`
+    : `<input type="text" value="${esc(value)}" style="width:100%;${extraStyle||''}" onblur="onTextFieldBlur(${idx},'${field}',this)">`;
+  // Kept as a frozen column right next to "แถวที่" (not scrolled far right past
+  // all 13 sections) so it's actually reachable without horizontal scrolling —
+  // always reserves the same width/position whether or not it's showing
+  // buttons, so the other frozen columns never have to shift between modes.
+  const actionsCell = (idx, isCat) => `<td style="${frozenStyle('actions')} background:#fff; white-space:nowrap; text-align:center;">${
+    !TABLE_VIEW_MODE ? `
+      <button type="button" title="เพิ่มแถวใหม่ต่อจากแถวนี้" onclick="addTier2Row(${idx})" style="border:1px solid #A6C8ED; background:#EAF4FD; color:#1B2A6B; border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:13px; font-weight:700;">＋</button>
+      ${isCat ? '' : `<button type="button" title="ลบแถวนี้" onclick="removeTier2Row(${idx})" style="border:1px solid #F5B3AE; background:#FDEAEA; color:#B3261E; border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:12px; margin-left:3px;">🗑</button>`}
+    ` : ''
+  }</td>`;
+
+  const rowsHtml = ADMIN_DRAFT.map((r, idx) => {
+    if(r.is_category){
+      const sectionCells = ADMIN_SECTIONS.map(sn => `
+          <td style="background:#dbe3f0;">${cell(idx,'w',sn)}</td>
+          <td style="background:#dbe3f0;">${cell(idx,'l',sn)}</td>
+          <td style="background:#dbe3f0;">${cell(idx,'s',sn)}</td>`).join('');
+      const nameCell = TABLE_VIEW_MODE
+        ? `<div class="view-cell" style="color:#fff; font-weight:700; background:transparent;">${esc(r.name)}</div>`
+        : `<input type="text" value="${esc(r.name)}" style="background:transparent; border:none; color:#fff; font-weight:700; width:100%;" onblur="onTextFieldBlur(${idx},'name',this)">`;
+      return `<tr>
+        <td class="row-idx-badge" style="${frozenStyle('idx')} background:#1B2A6B;"><span class="idx-chip">${idx}</span></td>
+        ${actionsCell(idx, true)}
+        <td colspan="8" style="${frozenStyle('name')} min-width:${FROZEN_COL_WIDTH.name+FROZEN_COL_WIDTH.kpi+FROZEN_COL_WIDTH.unit+FROZEN_COL_WIDTH.band0*5}px; text-align:left; background:#1B2A6B; color:#fff; font-weight:700; padding:6px 10px;">${nameCell}</td>
+        ${sectionCells}
+      </tr>`;
+    }
+    const bandCells = BAND_LABELS.map((lbl,bi) => {
+      const v = r.bands[bi];
+      return `<td style="${frozenStyle('band'+bi)} background:${BAND_BG_LIGHT[bi]};">${
+        TABLE_VIEW_MODE
+          ? `<div class="view-cell">${esc(v===null||v===undefined||v===''?'-':v)}</div>`
+          : `<input type="text" value="${esc(v===null||v===undefined?'':v)}" style="width:100%; text-align:center; border:1px solid #d1d5db; border-radius:4px; padding:3px; font-size:11px; box-sizing:border-box; background:transparent;" onblur="onBandBlur(${idx},${bi},this)">`
+      }</td>`;
+    }).join('');
+    const sectionCells = ADMIN_SECTIONS.map(sn => `
+        <td>${cell(idx,'w',sn)}</td>
+        <td>${cell(idx,'l',sn)}</td>
+        <td>${cell(idx,'s',sn)}</td>`).join('');
+    return `<tr>
+      <td class="row-idx-badge" style="${frozenStyle('idx')} background:#fff;"><span class="idx-chip">${idx}</span></td>
+      ${actionsCell(idx, false)}
+      <td class="lbl" style="${frozenStyle('name')} background:#fff;">${textField(idx,'name', r.name)}</td>
+      <td style="${frozenStyle('kpi')} background:#fff; text-align:left;">${textField(idx,'kpi_desc', r.kpi_desc||'')}</td>
+      <td style="${frozenStyle('unit')} background:#fff;">${textField(idx,'unit', r.unit||'')}</td>
+      ${bandCells}
+      ${sectionCells}
+    </tr>`;
+  }).join('');
+
+  const sectionHeadTop = ADMIN_SECTIONS.map(sn => `<th colspan="3">${esc(sn)}</th>`).join('');
+  const sectionHeadSub = ADMIN_SECTIONS.map(() => `<th style="min-width:42px;">%</th><th style="min-width:46px;">Level</th><th style="min-width:54px;">score</th>`).join('');
+  const bandHeadTop = `<th colspan="5" style="${frozenStyle('band0')} min-width:${FROZEN_COL_WIDTH.band0*5}px; background:#EFE9FB; z-index:4;">Target AND Performance Level</th>`;
+  const bandHeadSub = BAND_LABELS.map((lbl,bi)=>`<th style="${frozenStyle('band'+bi)} background:${BAND_COLORS[bi]}; z-index:4;">${lbl}</th>`).join('');
+
+  wrap.innerHTML = `<table class="ap-table">
+    <thead>
+      <tr>
+        <th rowspan="2" style="${frozenStyle('idx')} background:#1B2A6B; color:#fff; z-index:4;">แถวที่</th>
+        <th rowspan="2" style="${frozenStyle('actions')} background:#EAF4FD; z-index:4; font-size:10.5px;">จัดการ</th>
+        <th rowspan="2" style="${frozenStyle('name')} background:#EAF4FD; z-index:4;">KPI Name</th>
+        <th rowspan="2" style="${frozenStyle('kpi')} background:#EAF4FD; z-index:4;">KPI</th>
+        <th rowspan="2" style="${frozenStyle('unit')} background:#EAF4FD; z-index:4;">หน่วยวัด</th>
+        ${bandHeadTop}
+        ${sectionHeadTop}
+      </tr>
+      <tr>
+        ${bandHeadSub}
+        ${sectionHeadSub}
+      </tr>
+    </thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  ${!TABLE_VIEW_MODE ? `<p style="font-size:11.5px; color:#51607A; margin:8px 2px 0;">💡 กด ＋ เพื่อเพิ่มแถวรายการย่อยใหม่ต่อจากแถวนั้น (จะยังอยู่ในหมวดเดียวกัน) และผลรวมของหมวด/QSHE Index รวมจะคำนวณสูตรใหม่ให้อัตโนมัติ — ลบได้เฉพาะแถวรายการย่อย ลบแถวหมวดหลัก (สีน้ำเงินเข้ม) ไม่ได้เพื่อป้องกันโครงสร้างเสียหาย</p>` : ''}`;
+}
+
+/* Suggest SUM formulas for the category/rollup rows so the sheet is
+   "wired up" out of the box — fully editable/overwritable afterwards,
+   and never overwrites a formula the admin already saved before. */
+function seedDefaultCategoryFormulas(rows, force){
+  const catIdxs = [];
+  rows.forEach((r,i)=>{ if(r.is_category) catIdxs.push(i); });
+  if(!catIdxs.length) return;
+  const grandIdx = catIdxs[0];
+  const subCatIdxs = catIdxs.slice(1);
+  const childrenOf = {};
+  subCatIdxs.forEach((ci,k)=>{
+    const nextCatIdx = subCatIdxs[k+1] !== undefined ? subCatIdxs[k+1] : rows.length;
+    const kids = [];
+    for(let j=ci+1; j<nextCatIdx; j++){ if(!rows[j].is_category) kids.push(j); }
+    childrenOf[ci] = kids;
+  });
+  function ensureFormula(idx, field, formula){
+    const row = rows[idx];
+    if(!row) return;
+    ADMIN_SECTIONS.forEach(sn=>{
+      if(!row.formulas) row.formulas = {};
+      if(!row.formulas[sn]) row.formulas[sn] = {};
+      if(force || row.formulas[sn][field] === undefined){
+        row.formulas[sn][field] = formula;
+      }
+    });
+  }
+  subCatIdxs.forEach(ci=>{
+    const kids = childrenOf[ci];
+    if(!kids.length) return;
+    ensureFormula(ci, 'w', buildSumFormula('w', kids));
+    ensureFormula(ci, 's', buildSumFormula('s', kids));
+    ensureFormula(ci, 'l', `=S${ci}/W${ci}`);
+  });
+  if(subCatIdxs.length){
+    ensureFormula(grandIdx, 'w', buildSumFormula('w', subCatIdxs));
+    ensureFormula(grandIdx, 's', buildSumFormula('s', subCatIdxs));
+    ensureFormula(grandIdx, 'l', `=S${grandIdx}/W${grandIdx}`);
+  }
+}
+function buildSumFormula(field, idxs){
+  const F = field.toUpperCase();
+  const isContig = idxs.length>1 && idxs[idxs.length-1]-idxs[0]+1===idxs.length;
+  if(isContig) return `=SUM(${F}${idxs[0]}:${F}${idxs[idxs.length-1]})`;
+  return `=SUM(${idxs.map(i=>F+i).join(',')})`;
+}
+
+/* flame svg mark (generic, not a real trademark) */
+const FLAME = `<svg class="flame" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C12 6 8 8 8 13a4 4 0 0 0 8 0c0-1.5-.8-2.2-1.3-3 .8 3-1 4.5-2.7 4.5A2.7 2.7 0 0 1 9.3 11.8C9.3 8.5 12 7 12 2Z" fill="currentColor"/>
+</svg>`;
+
+/* ---------------- Personal Safety section icons ---------------- */
+const ICON_HARDHAT_BLUE = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+<circle cx="20" cy="14" r="8" fill="#F5C9A0"/>
+<path d="M9 15c0-6 5-10 11-10s11 4 11 10v2H9v-2Z" fill="#2E9BF0"/>
+<rect x="8" y="16" width="24" height="3" rx="1.5" fill="#1B2A6B"/>
+<rect x="12" y="24" width="16" height="14" rx="3" fill="#2E9BF0"/>
+<rect x="16" y="24" width="8" height="4" fill="#F5C9A0"/>
+</svg>`;
+const ICON_HARDHAT_ORANGE = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+<circle cx="20" cy="14" r="8" fill="#F5C9A0"/>
+<path d="M9 15c0-6 5-10 11-10s11 4 11 10v2H9v-2Z" fill="#F5892E"/>
+<rect x="8" y="16" width="24" height="3" rx="1.5" fill="#8a4a10"/>
+<rect x="12" y="24" width="16" height="14" rx="3" fill="#F5892E"/>
+<rect x="16" y="24" width="8" height="4" fill="#F5C9A0"/>
+<path d="M13 28h14M13 32h14" stroke="#FFD54A" stroke-width="1.6"/>
+</svg>`;
+const ICON_LTA = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="27" width="34" height="4" rx="2" fill="#8DA6D6"/>
+<rect x="6" y="16" width="20" height="11" rx="2" fill="#F4F8FC" stroke="#B7C5DB"/>
+<circle cx="14" cy="12" r="5" fill="#F5C9A0"/>
+<path d="M9 22c0-3 2-5 5-5s5 2 5 5" fill="#E1E8F0"/>
+<rect x="17" y="14" width="10" height="5" rx="2.5" fill="#fff" stroke="#E53935" stroke-width="1.4" transform="rotate(20 22 16.5)"/>
+<path d="M20 15.5l4 2" stroke="#E53935" stroke-width="1.6"/>
+</svg>`;
+const ICON_TRIR = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+<circle cx="20" cy="10" r="5.5" fill="#F5C9A0"/>
+<path d="M11 34c0-7 4-12 9-12s9 5 9 12" fill="#2E9BF0"/>
+<rect x="22" y="15" width="12" height="15" rx="1.5" fill="#fff" stroke="#51607A" stroke-width="1.2"/>
+<rect x="25" y="12" width="6" height="4" rx="1" fill="#C23E8F"/>
+<path d="M25 20h6M25 23h6M25 26h4" stroke="#51607A" stroke-width="1.2"/>
+</svg>`;
+const ICON_TROIR = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+<rect x="4" y="27" width="32" height="4" rx="1.5" fill="#8DA6D6"/>
+<rect x="4" y="22" width="14" height="7" rx="2" fill="#2E9BF0"/>
+<ellipse cx="24" cy="20" rx="9" ry="7" fill="#F4F8FC" stroke="#B7C5DB"/>
+<circle cx="21" cy="18" r="4.2" fill="#F5C9A0"/>
+<path d="M16 26c0-3 2-5 5-5" fill="none"/>
+<path d="M14 15c1-1 3 2 4-1M14 13c1-1 3 2 4-1" stroke="#51607A" stroke-width="1.1" fill="none"/>
+<text x="27" y="14" font-size="7" fill="#C23E8F">z</text>
+<text x="30" y="10" font-size="5" fill="#C23E8F">z</text>
+</svg>`;
+
+function buildSlides(DATA){
+const slides = [];
+
+/* ============ SLIDE 1: Cover ============ */
+slides.push(`
+<div class="slide cover">
+  <div class="flame-mark">${FLAME.replace('currentColor','#fff')}<span>NGV · QSHE</span></div>
+  <h1>รายงานผลการดำเนินงานด้าน QSHE<br>ประจำปี 2569</h1>
+  <div class="foot">ส่วนคุณภาพ ความปลอดภัย อาชีวอนามัยและสิ่งแวดล้อม<br>สายงานก๊าซธรรมชาติสำหรับยานยนต์ (คก.ผกก.)</div>
+</div>`);
+
+/* ============ SLIDE 2: hero divider (with illustration, left-aligned) ============ */
+const TARGET_ILLUS = `
+<svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="130" cy="130" r="120" fill="#E9F4FC"/>
+  <circle cx="130" cy="130" r="92" fill="#FDEDEB" stroke="#E8836F" stroke-width="10"/>
+  <circle cx="130" cy="130" r="60" fill="#FFF7ED" stroke="#E8836F" stroke-width="9"/>
+  <circle cx="130" cy="130" r="28" fill="#FBEFE3" stroke="#E8836F" stroke-width="8"/>
+  <circle cx="130" cy="130" r="8" fill="#1E73BE"/>
+  <line x1="40" y1="230" x2="122" y2="138" stroke="#1B2A6B" stroke-width="7" stroke-linecap="round"/>
+  <polygon points="122,138 100,150 110,120" fill="#1B2A6B"/>
+  <circle cx="70" cy="55" r="20" fill="#0FD6C4" opacity=".85"/>
+  <circle cx="215" cy="70" r="13" fill="#F5BF87"/>
+  <circle cx="225" cy="200" r="16" fill="#65D998" opacity=".85"/>
+</svg>`;
+slides.push(`
+<div class="slide hero-divider">
+  <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+  <div class="hero-illus">${TARGET_ILLUS}</div>
+  <div class="hero-text">
+    <h2>NGV QSHE Performance</h2>
+    <div class="sub">ประจำปี 2569</div>
+  </div>
+  <div class="strip"></div>
+</div>`);
+
+/* ============ SLIDE 2b: QSHE Index overview (KPI cards + summary charts) ============
+   Reads straight from DATA.tier1 / DATA.tier2 — the very same data the
+   admin edits (with formulas) in the "QSHE Index ระดับส่วน" table, so this
+   view always reflects whatever's been entered there; no separate data
+   entry needed for it. */
+{
+  const t1v = DATA.tier1.map(t=>t.qshe_index).filter(v=>v!==null&&v!==undefined);
+  const t2v = DATA.tier2.map(t=>t.overall).filter(v=>v!==null&&v!==undefined);
+  const avg1 = DATA.meta.avg_tier1 !== null && DATA.meta.avg_tier1 !== undefined ? DATA.meta.avg_tier1 : (t1v.length ? (t1v.reduce((a,b)=>a+b,0)/t1v.length) : null);
+  const avg2 = DATA.meta.avg_tier2 !== null && DATA.meta.avg_tier2 !== undefined ? DATA.meta.avg_tier2 : (t2v.length ? (t2v.reduce((a,b)=>a+b,0)/t2v.length) : null);
+  const bestTier1 = DATA.tier1.slice().filter(t=>t.qshe_index!==null&&t.qshe_index!==undefined).sort((a,b)=>b.qshe_index-a.qshe_index)[0];
+  const bestTier2 = DATA.tier2.slice().filter(t=>t.overall!==null&&t.overall!==undefined).sort((a,b)=>b.overall-a.overall)[0];
+
+  slides.push(`
+<div class="slide content">
+  <div class="brandmark">${FLAME}<span>NGV · QSHE</span></div>
+  <h2 class="title"><b>QSHE Index</b> — ภาพรวม ${esc(DATA.meta.period_label || 'M7-2569')}</h2>
+  <div class="kpi-row">
+    <div class="kpi-box"><div class="lbl">ค่าเฉลี่ย QSHE Index ระดับฝ่าย</div><div class="val">${fmt(avg1)}<small> / 5.0</small></div></div>
+    <div class="kpi-box"><div class="lbl">ค่าเฉลี่ย QSHE Index ระดับส่วน</div><div class="val">${fmt(avg2)}<small> / 5.0</small></div></div>
+    <div class="kpi-box"><div class="lbl">หน่วยงานระดับฝ่ายทั้งหมด</div><div class="val">${DATA.tier1.length}<small> ฝ่าย</small></div></div>
+    <div class="kpi-box"><div class="lbl">หน่วยงานระดับส่วนทั้งหมด</div><div class="val">${DATA.tier2.length}<small> ส่วน</small></div></div>
+  </div>
+  ${bestTier1 || bestTier2 ? `<div class="kpi-row" style="grid-template-columns:repeat(2,1fr); margin-bottom:18px;">
+    ${bestTier1 ? `<div class="kpi-box"><div class="lbl">ฝ่ายที่ทำคะแนนได้สูงสุด</div><div class="val" style="font-size:20px;">${esc(bestTier1.name)} <small style="font-size:15px;">(${fmt(bestTier1.qshe_index)})</small></div></div>` : '<div></div>'}
+    ${bestTier2 ? `<div class="kpi-box"><div class="lbl">ส่วนที่ทำคะแนนได้สูงสุด</div><div class="val" style="font-size:20px;">${esc(bestTier2.name)} <small style="font-size:15px;">(${fmt(bestTier2.overall)})</small></div></div>` : '<div></div>'}
+  </div>` : ''}
+  <div class="chart-grid" style="grid-template-columns:1fr;">
+    <div class="chart-card">
+      <span class="h" style="background:var(--blue);">QSHE Index ระดับส่วน</span>
+      <canvas id="cvOverviewTier2" height="130"></canvas>
+    </div>
+  </div>
+  <div class="strip"></div>
+</div>`);
+}
+
+/* ============ Helpers for report-card slides ============ */
+let CURRENT_PAGE_KEY = '';
+let RAGBOX_COUNTER = 0;
+function ragBox(color, title, rows, chartId, chartTitle){
+  const boxId = CURRENT_PAGE_KEY + '_box' + (RAGBOX_COUNTER++);
+  const ov = DATA.report_overrides && DATA.report_overrides.boxes && DATA.report_overrides.boxes[boxId];
+  const finalColor = (ov && ov.color) ? ov.color : color;
+  const finalTitle = (ov && ov.title !== undefined) ? ov.title : title;
+  const finalRows = (ov && ov.rows) ? ov.rows : rows;
+  const rowsHtml = finalRows.map(r=>`<div class="rag-row"><div class="rlabel">${r.label}</div><div class="rval">${r.value}</div></div>`).join('');
+  const chartHtml = chartId ? `<div class="mini-chart-card"><div class="mctitle">${chartTitle||''}</div><canvas id="${chartId}" height="90"></canvas></div>` : '';
+  return `<div class="rag-box ${finalColor}" data-box-id="${boxId}"><div class="rag-head">${finalTitle}</div>${rowsHtml}</div>${chartHtml}`;
+}
+function renderExtraBoxes(pageKey){
+  const extra = (DATA.report_overrides && DATA.report_overrides.extra && DATA.report_overrides.extra[pageKey]) || [];
+  if(!extra.length) return '';
+  const boxesHtml = extra.map((b,i)=>{
+    const rowsHtml = (b.rows||[]).map(r=>`<div class="rag-row"><div class="rlabel">${r.label}</div><div class="rval">${r.value}</div></div>`).join('');
+    return `<div class="rag-box ${b.color||'blue'}" data-extra-box="${pageKey}:${i}" style="margin-bottom:6px;"><div class="rag-head">${b.title||''}</div>${rowsHtml}</div>`;
+  }).join('');
+  return `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px;">${boxesHtml}</div>`;
+}
+/* Admin-added custom charts ("+ กราฟ" in the admin panel) for a page —
+   these always render via the dependency-free fallback bar renderer
+   (see drawAllChartsFallback), never through Chart.js, since their shape
+   isn't known ahead of time the way the 7 built-in charts are. */
+function renderExtraCharts(pageKey){
+  const list = (DATA.report_overrides && DATA.report_overrides.extraCharts && DATA.report_overrides.extraCharts[pageKey]) || [];
+  if(!list.length) return '';
+  const cardsHtml = list.map((ch,i)=>
+    `<div class="mini-chart-card" data-extra-chart="${pageKey}:${i}">
+      <div class="mctitle">${esc(ch.title||'')}</div>
+      <canvas height="95"></canvas>
+    </div>`
+  ).join('');
+  return `<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:10px;">${cardsHtml}</div>`;
+}
+const GAUGE_ICON = `<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 42a22 22 0 0 1 44 0" fill="none" stroke="#e74c8c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M8 42a22 22 0 0 1 6-15" fill="none" stroke="#f5a623" stroke-width="6" stroke-linecap="round"/>
+  <path d="M14 27a22 22 0 0 1 16-9" fill="none" stroke="#f7d417" stroke-width="6" stroke-linecap="round"/>
+  <path d="M30 18a22 22 0 0 1 16 9" fill="none" stroke="#4fc3a1" stroke-width="6" stroke-linecap="round"/>
+  <path d="M46 27a22 22 0 0 1 6 15" fill="none" stroke="#4a90d9" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="30" cy="46" r="5" fill="#2c5282"/>
+  <line x1="30" y1="46" x2="42" y2="30" stroke="#2c5282" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+const RAG_LEGEND = `<div class="rag-legend">
+  <span><i style="background:#0F9D58"></i>สอดคล้องกับค่าเป้าหมาย</span>
+  <span><i style="background:#E53935"></i>เกินค่าเป้าหมาย</span>
+  <span><i style="background:#F5B301"></i>อยู่ระหว่างดำเนินการให้สอดคล้องกับค่าเป้าหมาย</span>
+</div>`;
+function reportHeader(title){
+  return `<div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+    <div style="width:46px;height:46px;flex-shrink:0;">${GAUGE_ICON}</div>
+    <h2 class="rtitle" style="margin:0;padding-right:0;">${title}</h2>
+  </div>`;
+}
+
+/* ============ NEW SLIDE: Q Performance 2026 ============ */
+CURRENT_PAGE_KEY = 'qperf'; RAGBOX_COUNTER = 0;
+slides.push(`
+<div class="slide report">
+  ${reportHeader('Q Performance 2026')}
+  <div class="cols" style="grid-template-columns:1.35fr 1fr 1fr;">
+    <div>
+      <div class="colhead">ระบบการจัดการ</div>
+      ${ragBox('yellow','ร้อยละของเอกสารการปฏิบัติงานที่มีการจัดทำหรือทบทวนสอดคล้องกับกระบวนการหลัก (Core Process) และควบคุมเอกสารในระบบให้เป็นปัจจุบัน',
+        [{label:'Target',value:'100%'},{label:'หมายเหตุ',value:'-'}])}
+      <div class="mini-chart-card"><div class="mctitle">ร้อยละของเอกสารการปฏิบัติงานที่มีการจัดทำหรือทบทวนสอดคล้องกับกระบวนการหลัก (Core Process) ตามแผนที่กำหนด</div><canvas id="cvCoreProcess" height="95"></canvas></div>
+      ${ragBox('green','ระบบการจัดการด้าน QSHE',
+        [{label:'Target',value:'คงไว้ซึ่งการรับรองระบบการจัดการและพัฒนาการดำเนินงานอย่างต่อเนื่อง'},
+         {label:'Result',value:'• Internal Audit IMS สถานีหลักแล้วเสร็จ (23 มี.ค. – 11 พ.ค.)<br>• External Audit IMS สถานีหลักแล้วเสร็จ (5 พ.ค.–5 มิ.ย.)<br>• 5 Pillars อยู่ระหว่างประเมิน จำนวน 11/14 สัญญา (8 ก.ค. -17 ก.ย.)'}])}
+      ${ragBox('green','การตรวจสอบและแก้ไขข้อร้องเรียนด้าน QSHE',
+        [{label:'Target',value:'แก้ไขข้อร้องเรียนด้าน QSHE 100% และป้องกันการเกิดซ้ำ'},
+         {label:'Result',value:'ไม่พบข้อร้องเรียนด้าน QSHE เดือน ส.ค. สะสม 3 เรื่อง'}])}
+    </div>
+    <div>
+      <div class="colhead">QSHE Talk</div>
+      ${ragBox('green','QSHE Talk',
+        [{label:'Target',value:'ผู้บริหารระดับฝ่าย และส่วนขึ้นตรง กล่าวสร้างความตระหนักด้าน QSHE อย่างน้อย 2 ครั้ง'},
+         {label:'หมายเหตุ',value:'-'}], 'cvQsheTalk','QSHE Talk')}
+      <div class="colhead" style="margin-top:8px;">5ส</div>
+      ${ragBox('yellow','จำนวนครั้งการตรวจพื้นที่ 5ส/ 5ส Digital',
+        [{label:'Target',value:'หน่วยงานระดับฝ่าย และส่วนขึ้นตรง ดำเนินการตรวจพื้นที่อย่างน้อย 2 ครั้ง โดยมีผู้บริหารระดับฝ่าย/ ส่วน ร่วม'},
+         {label:'หมายเหตุ',value:'-'}], 'cv5s','5ส')}
+    </div>
+    <div>
+      <div class="colhead">PIC</div>
+      ${ragBox('yellow','PIC',
+        [{label:'Target',value:'ทุกหน่วยงานระดับฝ่ายและระดับส่วนขึ้นตรงต้องปรับปรุงกระบวนการทำงาน ผ่าน Productivity Improvement Circle (PIC Project) และได้ผลลัพธ์ด้านเงิน และ/หรือ เวลาและ/หรือ ด้านการปรับปรุง 5ส Digital และ/หรือด้าน…'},
+         {label:'หมายเหตุ',value:'-'}], 'cvPic','PIC Project')}
+      <div class="colhead" style="margin-top:8px;">TPM</div>
+      ${ragBox('yellow','TPM',
+        [{label:'Target',value:'คงไว้ซึ่งการจัดทำระบบและผ่านการตรวจประเมิน'},
+         {label:'Result',value:'สถานีหลัก 8/9 สถานี<br>สถานีบริการ 40/118 สถานี<br>อยู่ระหว่างการรวบรวมข้อมูล'}])}
+    </div>
+  </div>
+  ${renderExtraBoxes('qperf')}
+  ${renderExtraCharts('qperf')}
+  ${RAG_LEGEND}
+  <div class="strip"></div>
+</div>`);
+
+/* ============ NEW SLIDE: Safety-Occupational Health Performance 2026 ============ */
+CURRENT_PAGE_KEY = 'safety'; RAGBOX_COUNTER = 0;
+slides.push(`
+<div class="slide report">
+  ${reportHeader('Safety-Occupational Health Performance 2026')}
+  <div class="cols" style="grid-template-columns:1fr 1fr .78fr .78fr; font-size:10.5px;">
+    <div>
+      <div class="ps-title">Personal Safety</div>
+      <div class="ps-section">
+        <div class="ps-tag" style="background:#DFF3E5;">${ICON_HARDHAT_BLUE}<span>Employee</span></div>
+        <div class="ps-body">
+          <div class="ps-metrics" style="grid-template-columns:repeat(3,1fr);">
+            <div class="ps-metric">${ICON_LTA}<div class="ps-metric-cap">อุบัติเหตุถึงขั้นหยุดงาน</div></div>
+            <div class="ps-metric">${ICON_TRIR}<div class="ps-metric-cap">อัตราการบาดเจ็บจากการทำงานรวม</div></div>
+            <div class="ps-metric">${ICON_TROIR}<div class="ps-metric-cap">อัตราการเจ็บป่วยจากการทำงานตามคำวินิจฉัยของแพทย์อาชีวเวชศาสตร์</div></div>
+          </div>
+          <table class="ps-table green">
+            <tr><th></th><th>LTA</th><th>TRIR</th><th>TROIR</th></tr>
+            <tr><td class="ps-rowlabel">Target</td><td>0 คน</td><td>≤0.026 / 200,000<br>ชั่วโมงการทำงาน</td><td>≤0.048/ 200,000<br>ชั่วโมงการทำงาน</td></tr>
+            <tr class="ps-result"><td class="ps-rowlabel">Result</td><td>0 คน</td><td>0</td><td>0</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-tag" style="background:#FBE0DF;">${ICON_HARDHAT_ORANGE}<span>Contractor</span></div>
+        <div class="ps-body">
+          <div class="ps-metrics" style="grid-template-columns:repeat(2,1fr);">
+            <div class="ps-metric">${ICON_LTA}<div class="ps-metric-cap">อุบัติเหตุถึงขั้นหยุดงาน</div></div>
+            <div class="ps-metric">${ICON_TRIR}<div class="ps-metric-cap">อัตราการบาดเจ็บจากการทำงานรวม</div></div>
+          </div>
+          <table class="ps-table red">
+            <tr><th></th><th>LTA</th><th>TRIR</th></tr>
+            <tr><td class="ps-rowlabel">Target</td><td>0 คน</td><td>≤0.032/ 200,000 ชั่วโมงการทำงาน</td></tr>
+            <tr class="ps-result"><td class="ps-rowlabel">Result</td><td>1 คน</td><td>0.2</td></tr>
+          </table>
+        </div>
+      </div>
+      <div style="font-size:8px;color:var(--ink-soft);margin-top:2px;">ชม.ปฏิบัติงาน: พนักงาน 177,589 ชม. / ผู้รับเหมา 1,529,336.73 ชม.</div>
+    </div>
+    <div class="report-mid">
+      <div class="colhead">Sub standard / Near miss</div>
+      ${ragBox('yellow','การรายงานสภาพหรือการกระทำที่ต่ำกว่ามาตรฐานในระบบ INCR',
+        [{label:'Target',value:'เมื่อมีการรายงาน ต้องดำเนินการแก้ไขและปิดรายงานให้แล้วเสร็จ 100%'},
+         {label:'Result',value:'145/211 (66%)'}])}
+      <div style="display:flex; align-items:stretch; gap:8px; margin-top:6px; max-width:230px;">
+        <div style="width:100px; flex-shrink:0;">
+          <div style="clip-path:polygon(50% 0%, 50% 0%, 60% 100%, 40% 100%); -webkit-clip-path:polygon(50% 0%, 50% 0%, 60% 100%, 40% 100%); background:#E53935; height:24px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:2px;">
+            <span style="color:#fff; font-weight:700; font-size:9px;">1</span>
+          </div>
+          <div style="clip-path:polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%); -webkit-clip-path:polygon(40% 0%, 60% 0%, 70% 100%, 30% 100%); background:#F5B301; height:24px; margin-top:-1px; display:flex; align-items:center; justify-content:center;">
+            <span style="color:#fff; font-weight:700; font-size:10px;">1</span>
+          </div>
+          <div style="clip-path:polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%); -webkit-clip-path:polygon(30% 0%, 70% 0%, 80% 100%, 20% 100%); background:#F7E35F; height:24px; margin-top:-1px; display:flex; align-items:center; justify-content:center;">
+            <span style="color:#5a4a1f; font-weight:700; font-size:10px;">24</span>
+          </div>
+          <div style="clip-path:polygon(20% 0%, 80% 0%, 90% 100%, 10% 100%); -webkit-clip-path:polygon(20% 0%, 80% 0%, 90% 100%, 10% 100%); background:#8FD9A8; height:24px; margin-top:-1px; display:flex; align-items:center; justify-content:center;">
+            <span style="color:#22532f; font-weight:700; font-size:10px;">2</span>
+          </div>
+          <div style="clip-path:polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); -webkit-clip-path:polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); background:#3E7FD9; height:24px; margin-top:-1px; display:flex; align-items:center; justify-content:center;">
+            <span style="color:#fff; font-weight:700; font-size:10.5px;">201</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+          <div style="height:24px; display:flex; align-items:center; font-size:9px; font-weight:700; color:#E53935; line-height:1.1;">Major &amp; Catastrophic</div>
+          <div style="height:24px; display:flex; align-items:center; font-size:9.5px; font-weight:700; color:#C98A00;">Medium</div>
+          <div style="height:24px; display:flex; align-items:center; font-size:9.5px; font-weight:700; color:#A08A1F;">Low</div>
+          <div style="height:24px; display:flex; align-items:center; font-size:9.5px; font-weight:700; color:#3F9A63;">Near Miss</div>
+          <div style="height:24px; display:flex; align-items:center; font-size:9.5px; font-weight:700; color:#3E7FD9;">Substandard</div>
+        </div>
+      </div>
+      <div class="colhead" style="margin-top:8px;">Occupational Health</div>
+      ${ragBox('green','การตรวจสุขภาพตามปัจจัยเสี่ยง',
+        [{label:'Target',value:'พนักงานที่ทำงานต้องตรวจสุขภาพตามปัจจัยเสี่ยง ต้องเข้ารับการตรวจ 100% (ก.ค.-ส.ค.)'},
+         {label:'Result',value:'เป้าหมายทั้งสิ้น 58 คน — ดำเนินการแล้ว 56 คน (100%) — คงเหลือ 2 คน'}])}
+    </div>
+    <div>
+      <div class="colhead">Process Safety</div>
+      <div style="font-size:9px;text-align:center;margin-bottom:6px;">อุบัติเหตุด้านความปลอดภัยกระบวนการผลิต อ้างอิงเกณฑ์ตาม PSE API RP 754</div>
+      ${ragBox('red','PSE Tier 1',[{label:'Target',value:'0 case'},{label:'Result',value:'1 case'}])}
+      ${ragBox('green','PSE Tier 2',[{label:'Target',value:'0 case'},{label:'Result',value:'0 case'}])}
+    </div>
+    <div>
+      <div class="colhead">Road Safety</div>
+      <div style="font-size:9px;text-align:center;margin-bottom:6px;">อัตราการเกิดอุบัติเหตุขนส่งผลิตภัณฑ์ที่คู่สัญญา ปตท. เป็นฝ่ายผิด</div>
+      ${ragBox('green','Major Transportation Accident',[{label:'Target',value:'0 case'},{label:'Result',value:'0 case'}])}
+      <div style="font-size:9px;text-align:center;margin:6px 0;">อุบัติเหตุรถยนต์ขั้นร้ายแรงที่ ปตท. เป็นฝ่ายผิดส่งผลให้เกิดทรัพย์สินเสียหายเกินมูลค่าที่กำหนด</div>
+      ${ragBox('green','Car Accident',[{label:'Target',value:'0 case'},{label:'Result',value:'0 case'}])}
+    </div>
+  </div>
+  ${renderExtraBoxes('safety')}
+  ${renderExtraCharts('safety')}
+  ${RAG_LEGEND}
+  <div class="strip"></div>
+</div>`);
+
+/* ============ NEW SLIDE: Security Performance 2026 ============ */
+CURRENT_PAGE_KEY = 'security'; RAGBOX_COUNTER = 0;
+slides.push(`
+<div class="slide report">
+  ${reportHeader('Security Performance 2026')}
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr;">
+    <div>
+      <div class="colhead">การรายงานเหตุด้าน Security</div>
+      ${ragBox('green','การปิดรายงานด้าน Security ที่มีความสูญเสียตามที่กำหนด',
+        [{label:'Target',value:'ปิดรายงานเหตุละเมิดด้านความมั่นคง ที่มีความสูญเสียตามที่กำหนด 100%'},
+         {label:'Result',value:'0'}])}
+      ${ragBox('green','เหตุละเมิดที่มีความสูญเสียระดับขั้นร้ายแรงขึ้นไป (ที่ ปตท. สามารถควบคุมได้)',
+        [{label:'Target',value:'0 case'},{label:'Result',value:'0'}])}
+    </div>
+    <div>
+      <div class="colhead">Security Audit</div>
+      ${ragBox('green','การตรวจประเมินความมั่นคงปลอดภัยตามเกณฑ์การตรวจประเมินความมั่นคงปลอดภัยของสายงาน NGV',
+        [{label:'Target',value:'สถานีบริการก๊าซธรรมชาติหลักต้องผ่านการตรวจประเมิน 100% (9 สถานี)'},
+         {label:'Result',value:'อยู่ระหว่างดำเนินการตามแผน M4-M7 9/9 สถานี (100%)<br>22/04/26 สถานีฯ หลักลาดหลุมแก้ว<br>05/05/26 สถานีฯ หลักแก่งคอย<br>12/05/26 สถานีฯ หลักน้ำพอง<br>20/05/26 สถานีฯ หลักทุ่งครุ<br>10/06/26 สถานีฯ หลักบ้านบึง<br>23/06/26 สถานีฯ หลักลานกระบือ<br>07/07/26 สถานีฯ หลักราชบุรี<br>22/07/26 สถานีฯ หลักลำลูกกา<br>18/08/26 สถานีฯ หลักจะนะ'}])}
+    </div>
+    <div>
+      <div class="colhead">การซ้อมแผนฉุกเฉิน</div>
+      ${ragBox('green','การซ้อมแผนฉุกเฉินของสถานประกอบการของสายงานฯ',
+        [{label:'Target',value:'• ทุกสถานประกอบการของสายงานฯ ต้องผ่านการฝึกซ้อมแผนฉุกเฉินที่กฎหมายกำหนดอย่างน้อยปีละ 1 ครั้ง<br>• กรณีมีการติดตั้ง LNG/CO2/N2 ต้องจัดให้มีการซ้อมระงับเหตุฉุกเฉินกรณีสารเคมีรั่วไหลอย่างน้อยปีละ 1 ครั้ง'},
+         {label:'Result',value:'• สถานีหลัก 15/15 สถานี (100%)<br>• สถานีบริการ 120/171 สถานี (70%)<br>• NGV Care Center 1/1 (100%)'}])}
+      ${ragBox('green','การซ้อมแผนความมั่นคงปลอดภัย',
+        [{label:'Target',value:'ซ้อมแผน 1 ครั้ง (สถานีหลักจะนะ)'},
+         {label:'Result',value:'ดำเนินการแล้วเสร็จ (19/8/26) ซ้อมเพิ่มเติม สถานีหลักแก่งคอย และลำลูกกา'}])}
+      ${ragBox('yellow','การซ้อมแผนบริหารความต่อเนื่องทางธุรกิจ',
+        [{label:'Target',value:'ซ้อมแผนบริหารความต่อเนื่องทางธุรกิจตามแผนงานของสายงาน (ซ้อมแผนช่วงเดือนตุลาคม)'},
+         {label:'Result',value:'อยู่ระหว่างร่าง Scenario และกำหนดบทบาทการซ้อมแผน'}])}
+    </div>
+  </div>
+  ${renderExtraBoxes('security')}
+  ${renderExtraCharts('security')}
+  ${RAG_LEGEND}
+  <div class="strip"></div>
+</div>`);
+
+/* ============ NEW SLIDE: Environmental Performance 2026 (Spill + GHG) ============ */
+CURRENT_PAGE_KEY = 'env1'; RAGBOX_COUNTER = 0;
+slides.push(`
+<div class="slide report">
+  ${reportHeader('Environmental Performance 2026')}
+  <div class="cols" style="grid-template-columns:.68fr 1.5fr;">
+    <div>
+      <div class="colhead">Oil and Chemical Spill</div>
+      ${ragBox('green','No. of Spill (0.5-50 bbl)',[{label:'Target',value:'0 case'},{label:'Result',value:'0'}])}
+      ${ragBox('green','No. of Sig Spill (≥ 50 bbl)',[{label:'Target',value:'0 case'},{label:'Result',value:'0'}])}
+    </div>
+    <div>
+      <div class="colhead">Green House Gas</div>
+      <div style="font-size:10px;margin-bottom:8px;">ปริมาณก๊าซเรือนกระจกทางตรง เช่น การเผาไหม้อยู่กับที่ (stationary combustion), การรั่วไหล (fugitive emission)<br>ปริมาณก๊าซเรือนกระจกทางอ้อม ได้แก่ การปล่อยก๊าซเรือนกระจกจากการใช้พลังงาน เช่น การซื้อไฟฟ้า เป็นต้น</div>
+      <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:10px;">
+        <div>
+          ${ragBox('blue','การรายงานการปล่อยก๊าซเรือนกระจกของสายงานฯ',
+            [{label:'Target',value:'มีการรายงานการปล่อยก๊าซเรือนกระจกทางตรงและทางอ้อม ของสายงานฯ'},
+             {label:'Result',value:'รายงาน Q2/2569 แล้วเสร็จ'}])}
+          ${ragBox('green','ปริมาณการปล่อยก๊าซเรือนกระจกของสายงานฯ',
+            [{label:'Target',value:'ปริมาณการปล่อยก๊าซเรือนกระจก ลดลง 0.5% จากปี 2025 (Maximum limit 2026: 110,000 tCO2e)'},
+             {label:'Result',value:'<b>49,422 / 110,000 tCO2e</b><br><span style="background:#FFF59D;">45% of Maximum limit</span>'}])}
+        </div>
+        <div class="mini-chart-card" style="margin-top:0; display:flex; flex-direction:column;">
+          <div class="mctitle">NGV GHG Emission 2026 (tCO2e)</div>
+          <canvas id="cvGhg" height="150"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  ${renderExtraBoxes('env1')}
+  ${renderExtraCharts('env1')}
+  ${RAG_LEGEND}
+  <div class="strip"></div>
+</div>`);
+
+/* ============ NEW SLIDE: Environmental Performance 2026 (Waste to Landfill) ============ */
+CURRENT_PAGE_KEY = 'env2'; RAGBOX_COUNTER = 0;
+slides.push(`
+<div class="slide report" style="align-items:center;">
+  ${reportHeader('Environmental Performance 2026')}
+  <div style="width:640px;margin:0 auto;">
+    <div class="colhead" style="font-size:16px;margin-bottom:12px;">Waste to Landfill</div>
+    ${ragBox('green','ร้อยละของปริมาณของเสียอันตรายจากอุตสาหกรรมที่ส่งไปกำจัดด้วยวิธีการฝังกลบต่อปริมาณของเสียอันตรายจากอุตสาหกรรมทั้งหมดที่ส่งกำจัด',
+      [{label:'Target',value:'0'},{label:'Result',value:'-'}])}
+    <div style="height:14px;"></div>
+    ${ragBox('green','ร้อยละของปริมาณของเสียไม่อันตรายจากอุตสาหกรรมที่ส่งไปกำจัดด้วยวิธีการฝังกลบต่อปริมาณของเสียไม่อันตรายจากอุตสาหกรรมทั้งหมดที่ส่งกำจัด',
+      [{label:'Target',value:'0'},{label:'Result',value:'-'}])}
+  </div>
+  ${renderExtraBoxes('env2')}
+  ${renderExtraCharts('env2')}
+  ${RAG_LEGEND}
+  <div class="strip"></div>
+</div>`);
+
+/* ============ NEW SLIDE: Legal and compliance 2026 ============ */
+{
+  const ls = DATA.legal_stats || {};
+  const docs = DATA.legal_month_docs || [];
+  const monthLbl = esc(ls.month_label || '');
+  const docRows = docs.map((d,i)=>`<tr><td>${i+1}</td><td style="text-align:left;">${esc(d.desc)}</td><td>${esc(d.dept)}</td><td>${esc(d.count)}</td></tr>`).join('');
+  slides.push(`
+<div class="slide report">
+  ${reportHeader('Legal and compliance 2026')}
+  <div class="cols" style="grid-template-columns:1fr 1.6fr; grid-template-rows:auto 1fr;">
+    <div>
+      <div class="stat-block" style="background:#E3E5E8;"><div class="n">${fmtInt(ls.total)}</div><div class="t">Total</div></div>
+      <div class="stat-block" style="background:#8CF0B0;"><div class="n">${fmtInt(ls.complete)}</div><div class="t">Total complete</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="stat-block" style="background:#57C2F2;padding:8px;"><div class="n" style="font-size:22px;">${fmtInt(ls.on_process)}</div><div class="t" style="font-size:11px;">On process</div></div>
+        <div class="stat-block" style="background:#F29B96;padding:8px;"><div class="n" style="font-size:22px;">${fmtInt(ls.delay)}</div><div class="t" style="font-size:11px;">Delay</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="mini-chart-card" style="height:230px;">
+        <div class="mctitle" style="font-size:12px;">รายการเอกสารที่ต้องดำเนินตามกฎหมายของสายงาน NGV</div>
+        <canvas id="cvLegalMonthly" height="170"></canvas>
+      </div>
+    </div>
+  </div>
+  <div style="border:2px solid #3E7FD9;border-radius:10px;padding:10px 14px;margin-top:10px;display:grid;grid-template-columns:1fr 1.6fr;gap:12px;">
+    <div class="mini-chart-card" style="margin:0; display:flex; flex-direction:column;">
+      <div class="mctitle" style="font-size:11px;">จำนวนรายการเอกสารที่ต้องดำเนินตามกฎหมายของเดือน${monthLbl}</div>
+      <canvas id="cvLegalDept" height="110"></canvas>
+    </div>
+    <table class="safety-tbl" style="font-size:9.5px;">
+      <thead><tr style="background:#5B93D6;color:#fff;"><th>ลำดับ</th><th style="text-align:left;">เอกสารที่ต้องดำเนินตามกฎหมายของเดือน${monthLbl}</th><th>ฝ่าย</th><th>จำนวน</th></tr></thead>
+      <tbody>${docRows}</tbody>
+    </table>
+  </div>
+  ${renderExtraBoxes('legal')}
+  ${renderExtraCharts('legal')}
+  <div class="strip"></div>
+</div>`);
+}
+
+/* ============ SLIDE 4: Safety divider ============ */
+slides.push(`
+<div class="slide divider">
+  <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+  <h2><span class="num">1.</span> Safety Management Effectiveness</h2>
+  <div class="sub">(ผกก. / ผจ.ฝ่าย / ผจ.คก.)</div>
+  <div class="strip"></div>
+</div>`);
+
+/* ============ SLIDE 5: Safety table ============ */
+{
+  const names = Object.keys(DATA.safety_lta);
+  slides.push(`
+  <div class="slide content">
+    <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+    <h2 class="title">1. Safety Management Effectiveness</h2>
+    <div class="obj-box">
+      <div class="head">Objectives &amp; Formula</div>
+      <p><b>Objective:</b> เพื่อให้มั่นใจว่าการดำเนินงานด้านความปลอดภัยเป็นไปตามเป้าหมายและมุ่งสู่อุบัติเหตุเป็นศูนย์</p>
+      <p><b>Formula:</b> วัดผลการดำเนินงาน 2 เรื่อง — LTA (Loss Time Accident) และ Process Safety Event (Tier 1)</p>
+    </div>
+    <table class="safety-tbl">
+      <thead>
+        <tr><th rowspan="2">ตัวชี้วัด</th><th colspan="5">ระดับการวัดผล (Target Setting Criteria)</th><th colspan="${names.length}">Result — ระดับฝ่าย</th></tr>
+        <tr><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>L5</th>${names.map(n=>`<th>${n}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rowlabel" style="text-align:left;font-weight:600;">LTA<br><span style="font-weight:400;font-size:11px;color:var(--ink-soft);">พนักงานและผู้รับเหมา</span></td>
+          <td>≥ 1</td><td>-</td><td>-</td><td>-</td><td>0</td>
+          ${names.map(n=>`<td>${pill(DATA.safety_lta[n],0)}</td>`).join('')}
+        </tr>
+        <tr>
+          <td class="rowlabel" style="text-align:left;font-weight:600;">Process Safety Event (Tier 1)</td>
+          <td>≥ 1</td><td>-</td><td>-</td><td>-</td><td>0</td>
+          ${names.map(n=>`<td>${pill(DATA.safety_pse[n],0)}</td>`).join('')}
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11.5px;color:var(--ink-soft);margin-top:14px;">
+      หมายเหตุ: ข้อมูลต้นฉบับ (ชีท "QSHE Index summary") บันทึกเป็นค่ารวม ไม่ได้แยกพนักงาน/ผู้รับเหมาเป็นคนละแถว
+      แสดงผลเป็นระดับ (Level) L1–L5 ตามเกณฑ์ที่กำหนด
+    </p>
+    <div class="strip"></div>
+  </div>`);
+}
+
+/* ============ Helper: render a QSHE Index detail table for one ฝ่าย ============ */
+function renderQTable(groupName, sectionNames){
+  const rows = DATA.tier2_rows;
+  const overallRow = rows.find(r=>r.row===3);
+  const catRows = new Set([3,4,6,10,29,35]);
+  let bodyHtml = '';
+  rows.forEach(r=>{
+    const anyVal = sectionNames.some(s => r.levels[s] !== null && r.levels[s] !== undefined);
+    if(!anyVal) return;
+    if(r.row===3){
+      bodyHtml += `<tr class="overall-row"><td colspan="3">QSHE Index</td>${sectionNames.map(s=>`<td>${pill(r.levels[s])}</td>`).join('')}</tr>`;
+      return;
+    }
+    if(catRows.has(r.row)){
+      bodyHtml += `<tr class="cat-row"><td colspan="3">${esc(r.name)}</td>${sectionNames.map(s=>`<td>${pill(r.levels[s])}</td>`).join('')}</tr>`;
+      return;
+    }
+    bodyHtml += `<tr>
+      <td class="kpi-name">${esc(r.name)}</td>
+      <td class="kpi-desc">${esc(r.kpi_desc)||''}</td>
+      <td>${esc(r.unit)||''}</td>
+      ${sectionNames.map(s=>`<td>${pill(r.levels[s])}</td>`).join('')}
+    </tr>`;
+  });
+
+  return `
+  <div class="slide content">
+    <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+    <h2 class="title">QSHE Index <b>${groupName}</b> <span class="date-part">${esc(DATA.meta.period_label || 'M7-2569')}</span></h2>
+    <div class="qtable-wrap">
+      <table class="qtable">
+        <colgroup>
+          <col style="width:20%"><col style="width:26%"><col style="width:9%">
+          ${sectionNames.map(()=>`<col style="width:${45/sectionNames.length}%">`).join('')}
+        </colgroup>
+        <thead>
+          <tr><th rowspan="2">KPI</th><th rowspan="2">รายละเอียด</th><th rowspan="2">หน่วยวัด</th>${sectionNames.map(s=>`<th>${s}</th>`).join('')}</tr>
+          <tr>${sectionNames.map(()=>`<th style="font-size:10px;">Level</th>`).join('')}</tr>
+        </thead>
+        <tbody>${bodyHtml}</tbody>
+      </table>
+    </div>
+    <div class="strip"></div>
+  </div>`;
+}
+
+/* ============ SLIDE 6: QSHE Index divider (section 2) ============ */
+slides.push(`
+<div class="slide divider">
+  <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+  <h2><span class="num">2.</span> QSHE Index</h2>
+  <div class="sub">(ผจ.ส่วน / พนักงาน)</div>
+  <div class="strip"></div>
+</div>`);
+
+/* ============ SLIDES 7-14: per ฝ่าย divider + table ============ */
+const groupTitles = {"พกก.":"2.1","บกก.":"2.2","ปกก.":"2.3","ตกก.":"2.4"};
+Object.keys(DATA.groups).forEach(g=>{
+  slides.push(`
+  <div class="slide divider">
+    <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+    <h2><span class="num">${groupTitles[g]} QSHE Index</span></h2>
+    <div class="sub">${g}</div>
+    <div class="strip"></div>
+  </div>`);
+  slides.push(renderQTable(g, DATA.groups[g]));
+});
+
+/* ============ Extra: ผจ.คก. section table (standalone) ============ */
+slides.push(renderQTable('คก. (ส่วนคุณภาพความปลอดภัยฯ)', ['ผจ.คก.']));
+
+/* ============ Backup / source slide ============ */
+slides.push(`
+<div class="slide content">
+  <div class="brandmark">${FLAME.replace('currentColor','var(--navy)')}<span>NGV · QSHE</span></div>
+  <h2 class="title">ข้อมูลอ้างอิง / Back up ข้อมูล</h2>
+  <div class="backup-list">
+    <p>แดชบอร์ดนี้เป็น <b>สแนปช็อตข้อมูล</b> ที่ดึงจากไฟล์ Excel ต้นฉบับ:<br><code>${DATA.meta.source_file}</code></p>
+    <ul>
+      <li>QSHE Index ระดับฝ่าย (ผกก./ผจ.ฝ่าย) — ชีท <code>QSHE Index(EVP-VP)</code> แถวสรุป "KPI QSHEIndex"</li>
+      <li>QSHE Index ระดับส่วน + รายละเอียด KPI — ชีท <code>QSHE INDEX 2026</code></li>
+      <li>Safety Mgmt. Effectiveness (LTA/PSE) — ชีท <code>QSHE Index summary</code></li>
+      <li>การจัดกลุ่มส่วนงานภายใต้แต่ละฝ่าย — ชีท <code>QSHE Index(DIV-ตกก./ปกก./บกก./พกก.)</code></li>
+    </ul>
+    <div class="flag-note">
+      ⚠ พบข้อมูล error (#REF!) ในไฟล์ต้นฉบับที่ผลรวมของ "ผจ.ตกก." (ชีท QSHE Index(EVP-VP) เซลล์ P20/P22 และชีท QSHE Index summary แถว 7)
+      แดชบอร์ดแสดงค่าดังกล่าวเป็น "ไม่มีข้อมูล" แทนการประมาณค่า — แนะนำให้ตรวจสอบสูตรก่อนเผยแพร่อย่างเป็นทางการ
+    </div>
+    <p style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);">
+      หมายเหตุ: ไม่ใช่ live-link กับ Excel — เมื่อข้อมูลอัปเดต ต้องสร้างแดชบอร์ดใหม่เพื่อรีเฟรช
+    </p>
+  </div>
+  <div class="strip"></div>
+</div>`);
+
+/* ============ Thank you ============ */
+slides.push(`
+<div class="slide thanks">
+  <div class="flame-mark" style="position:absolute;top:34px;left:40px;display:flex;align-items:center;gap:10px;font-family:'Kanit';font-weight:700;font-size:17px;">${FLAME.replace('currentColor','#fff')}<span>NGV · QSHE</span></div>
+  <h1>Thank You</h1>
+</div>`);
+
+return slides;
+} // end buildSlides()
+
+/* ---------- render ---------- */
+const deck = document.getElementById('deck');
+const stageWrap = deck; // stage lives inside #deck
+let stage, slideEls, idx = 0;
+let chartsDrawn = {};
+
+function renderAll(DATA, opts){
+  opts = opts || {};
+  currentData = DATA;
+  const prevScroll = opts.keepIndex ? window.scrollY : 0;
+  const slides = buildSlides(DATA);
+  deck.innerHTML = `<div id="stage">${slides.join('\\n')}</div>`;
+  stage = document.getElementById('stage');
+  slideEls = Array.from(document.querySelectorAll('.slide'));
+  slideEls.forEach((el,i)=>{ el.id = 'section-'+i; });
+  chartsDrawn = {};
+  buildQuickNav();
+  drawAllChartsFallback(); // show something immediately, before Chart.js has had any chance to load
+  drawAllCharts();
+  chartRetryCount = 0;
+  retryChartsUntilReady();
+  updateStatusBar(DATA);
+  adjustDeckPadding();
+  if(opts.keepIndex) window.scrollTo(0, prevScroll);
+  updateScrollProgress();
+}
+
+function adjustDeckPadding(){
+  const toolbarH = document.getElementById('toolbar').offsetHeight;
+  const reminder = document.getElementById('monthReminder');
+  const reminderH = reminder.style.display !== 'none' ? reminder.offsetHeight : 0;
+  reminder.style.top = toolbarH+'px';
+  const nav = document.getElementById('quickNav');
+  nav.style.top = (toolbarH+reminderH)+'px';
+  const navH = nav.offsetHeight;
+  deck.style.paddingTop = (toolbarH+reminderH+navH+24)+'px';
+}
+
+function sectionLabel(el, i){
+  const h = el.querySelector('h1,h2,h3');
+  let txt = h ? h.textContent.trim().replace(/\s+/g,' ') : '';
+  if(!txt){
+    if(el.classList.contains('cover')) txt = 'หน้าปก';
+    else if(el.classList.contains('thanks')) txt = 'Thank You';
+    else txt = 'หัวข้อ';
+  }
+  return (i+1)+'. '+txt.slice(0,70);
+}
+function buildQuickNav(){
+  const sel = document.getElementById('navSelect');
+  sel.innerHTML = slideEls.map((el,i)=> `<option value="${i}">${esc(sectionLabel(el,i))}</option>`).join('');
+  sel.onchange = function(){
+    const el = slideEls[+this.value];
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+}
+
+function updateScrollProgress(){
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docH>0 ? Math.min(100, Math.max(0,(scrollTop/docH)*100)) : 0;
+  const bar = document.getElementById('progressBar');
+  const pctLabel = document.getElementById('scrollPct');
+  if(bar) bar.style.width = pct+'%';
+  if(pctLabel) pctLabel.textContent = Math.round(pct)+'%';
+}
+window.addEventListener('scroll', updateScrollProgress, {passive:true});
+window.addEventListener('resize', ()=>{ adjustDeckPadding(); updateScrollProgress(); });
+
+function drawAllCharts(){
+  slideEls.forEach((el,i)=>{
+    if(chartsDrawn[i]) return;
+    const ok = drawReportCharts(el);
+    if(ok) chartsDrawn[i] = true;
+  });
+}
+let chartRetryCount = 0;
+function retryChartsUntilReady(){
+  if(typeof Chart !== 'undefined'){ drawAllCharts(); return; } // upgrades any fallback bars already on screen to real Chart.js charts
+  chartRetryCount++;
+  if(chartRetryCount > 20) return; // ~10s of retrying in the background, then stop quietly — the fallback bars shown since render time are already a complete, working view
+  setTimeout(retryChartsUntilReady, 500);
+}
+window.addEventListener('load', drawAllCharts); // extra safety net once every resource (incl. the Chart.js CDN script) has settled
+
+/* =========================================================
+   Dependency-free fallback: shown immediately for every chart,
+   before Chart.js has had any chance to load, so nothing is ever
+   left blank. If the Chart.js CDN loads successfully (checked in
+   the background by retryChartsUntilReady above), drawReportCharts
+   removes the matching fallback and draws the real chart in its
+   place; if the CDN never loads (offline, or a firewall blocking
+   cdnjs), the fallback bars simply stay as the permanent view.
+   Every canvas the page knows how to draw is registered once here,
+   so both the fallback and the real chart read the exact same
+   numbers.
+   ========================================================= */
+function chartSpecs(DATA){
+  const specs = {};
+  const t1LevelColor = v => v===null||v===undefined ? '#D1D5DB' : (v<1.5?'#EE9C9B':v<2.5?'#F5BF87':v<3.5?'#F2E066':v<4.5?'#A6E1B7':'#65D998');
+  specs.cvOverviewTier2 = { decimals:2, labels: DATA.tier2.map(t=>t.name), datasets:[{ label:'QSHE Index', data: DATA.tier2.map(t=>t.overall), colors: DATA.tier2.map(t=>t1LevelColor(t.overall)) }] };
+  const barColors = ['#F5B301','#34A853','#2E9BF0','#C23E8F','#8DA6D6'];
+  const lineColors = { ghg: ['#34A853','#F5892E'] };
+  Object.keys(CHART_DEFAULTS).forEach(key=>{
+    const cd = getChartData(DATA, key);
+    const canvasId = { coreProcess:'cvCoreProcess', qsheTalk:'cvQsheTalk', fiveS:'cv5s', pic:'cvPic', ghg:'cvGhg', legalMonthly:'cvLegalMonthly', legalDept:'cvLegalDept' }[key];
+    if(!canvasId) return;
+    if(key === 'ghg'){
+      specs[canvasId] = { decimals:0, type:'line', labels: cd.labels,
+        datasets: cd.datasets.map((ds,i)=>({ label:ds.label, data:ds.data, color: lineColors.ghg[i%lineColors.ghg.length], dashed: i===1 })) };
+    } else {
+      specs[canvasId] = { decimals:0, labels: cd.labels, datasets: cd.datasets.map((ds,i)=>({ label:ds.label, data:ds.data, color: barColors[i%barColors.length] })) };
+    }
+  });
+  return specs;
+}
+function cleanupFallback(canvas){
+  if(!canvas) return;
+  const next = canvas.nextElementSibling;
+  if(next && next.classList && next.classList.contains('fallback-chart')) next.remove();
+  canvas.style.display = '';
+  canvas.dataset.fallbackDrawn = '';
+}
+function renderFallbackBars(canvas, spec){
+  const h = canvas.height || canvas.getAttribute('height') || 90;
+  const wrap = document.createElement('div');
+  wrap.className = 'fallback-chart';
+  wrap.style.cssText = `display:flex; align-items:flex-end; gap:4px; height:${h}px; padding:2px 2px 2px; font-family:'IBM Plex Sans Thai',sans-serif; overflow:hidden; box-sizing:border-box;`;
+  const allVals = spec.datasets.flatMap(ds=>ds.data).filter(v=>v!==null && v!==undefined);
+  const maxV = Math.max(1, ...allVals);
+  const decimals = spec.decimals !== undefined ? spec.decimals : 0;
+  spec.labels.forEach((label, i)=>{
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;';
+    const barsRow = document.createElement('div');
+    barsRow.style.cssText = 'display:flex; align-items:flex-end; gap:1px; width:100%; flex:1; min-height:0; justify-content:center;';
+    spec.datasets.forEach((ds,dsi)=>{
+      const v = ds.data[i];
+      const pct = (v===null||v===undefined) ? 0 : Math.max(v===0?0:2, (v/maxV)*100);
+      const barCol = document.createElement('div');
+      barCol.style.cssText = 'display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; flex:1; max-width:20px;';
+      const barColor = (ds.colors && ds.colors[i]) || ds.color || '#2E9BF0';
+      if(v!==null && v!==undefined){
+        const valLbl = document.createElement('div');
+        valLbl.textContent = Number(v).toFixed(decimals);
+        valLbl.style.cssText = 'font-size:7px; color:#51607A; line-height:1.3;';
+        barCol.appendChild(valLbl);
+      }
+      const bar = document.createElement('div');
+      bar.style.cssText = `width:100%; height:${pct}%; background:${barColor}; border-radius:2px 2px 0 0; min-height:${v?'2px':'0'};`;
+      barCol.appendChild(bar);
+      barsRow.appendChild(barCol);
+    });
+    col.appendChild(barsRow);
+    const lbl = document.createElement('div');
+    lbl.textContent = label;
+    lbl.title = label;
+    lbl.style.cssText = 'font-size:6.5px; color:#51607A; text-align:center; width:100%; max-height:16px; line-height:1.3; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; flex:none; margin-top:1px;';
+    col.appendChild(lbl);
+    wrap.appendChild(col);
+  });
+  canvas.style.display = 'none';
+  canvas.insertAdjacentElement('afterend', wrap);
+}
+function renderFallbackLine(canvas, spec){
+  const h = Math.max(canvas.height || canvas.getAttribute('height') || 130, 130); // logical drawing height used for the math below — the SVG itself stretches to fill whatever space the box actually gives it
+  const w = canvas.clientWidth || canvas.parentElement.clientWidth || 400;
+  const padL = 34, padR = 8, padT = 14, padB = 16;
+  const plotW = Math.max(10, w - padL - padR);
+  const plotH = Math.max(10, h - padT - padB);
+  const allVals = spec.datasets.flatMap(ds=>ds.data).filter(v=>v!==null && v!==undefined);
+  const maxV = Math.max(1, ...allVals);
+  const decimals = spec.decimals !== undefined ? spec.decimals : 0;
+  const n = spec.labels.length;
+  const xAt = i => padL + (n<=1 ? plotW/2 : (i/(n-1))*plotW);
+  const yAt = v => padT + plotH - (v/maxV)*plotH;
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('preserveAspectRatio', 'none'); // stretch to fill the box fully rather than letterboxing to a fixed aspect ratio
+  svg.style.cssText = 'display:block; width:100%; height:100%; font-family:\'IBM Plex Sans Thai\',sans-serif;';
+
+  // gridline + x labels
+  const axis = document.createElementNS(svgNS,'line');
+  axis.setAttribute('x1', padL); axis.setAttribute('y1', padT+plotH); axis.setAttribute('x2', padL+plotW); axis.setAttribute('y2', padT+plotH);
+  axis.setAttribute('stroke', '#E1E8F0'); axis.setAttribute('stroke-width', '1');
+  svg.appendChild(axis);
+  spec.labels.forEach((label,i)=>{
+    const t = document.createElementNS(svgNS,'text');
+    t.setAttribute('x', xAt(i)); t.setAttribute('y', h-3); t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-size','7'); t.setAttribute('fill','#51607A');
+    t.textContent = label;
+    svg.appendChild(t);
+  });
+
+  spec.datasets.forEach(ds=>{
+    const pts = ds.data.map((v,i)=> v===null||v===undefined ? null : [xAt(i), yAt(v)]);
+    const validPts = pts.filter(p=>p);
+    if(validPts.length){
+      const path = document.createElementNS(svgNS,'path');
+      const d = validPts.map((p,idx)=> (idx===0?'M':'L')+p[0]+','+p[1]).join(' ');
+      path.setAttribute('d', d);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke', ds.color || '#2E9BF0');
+      path.setAttribute('stroke-width', '2');
+      if(ds.dashed) path.setAttribute('stroke-dasharray','5,4');
+      svg.appendChild(path);
+    }
+    pts.forEach((p,i)=>{
+      if(!p) return;
+      if(!ds.dashed){
+        const c = document.createElementNS(svgNS,'circle');
+        c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r','2.5');
+        c.setAttribute('fill', ds.color || '#2E9BF0');
+        svg.appendChild(c);
+        const t = document.createElementNS(svgNS,'text');
+        t.setAttribute('x', p[0]); t.setAttribute('y', p[1]-6); t.setAttribute('text-anchor','middle');
+        t.setAttribute('font-size','7'); t.setAttribute('fill', ds.color || '#2E9BF0'); t.setAttribute('font-weight','700');
+        t.textContent = Number(ds.data[i]).toFixed(decimals);
+        svg.appendChild(t);
+      }
+    });
+  });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'fallback-chart';
+  wrap.style.cssText = `flex:1 1 auto; min-height:${h}px; display:flex; flex-direction:column;`;
+  svg.style.flex = '1 1 auto';
+  svg.style.minHeight = '0';
+  wrap.appendChild(svg);
+
+  // small legend under the chart
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex; gap:10px; justify-content:center; font-size:7px; color:#51607A; margin-top:2px; flex:none;';
+  spec.datasets.forEach(ds=>{
+    const item = document.createElement('span');
+    item.style.cssText = 'display:flex; align-items:center; gap:3px;';
+    const swatch = document.createElement('span');
+    swatch.style.cssText = `width:9px; height:2px; background:${ds.color||'#2E9BF0'}; display:inline-block;`;
+    item.appendChild(swatch);
+    const lbl = document.createElement('span');
+    lbl.textContent = ds.label;
+    item.appendChild(lbl);
+    legend.appendChild(item);
+  });
+  wrap.appendChild(legend);
+
+  canvas.style.display = 'none';
+  canvas.insertAdjacentElement('afterend', wrap);
+}
+function drawAllChartsFallback(){
+  const DATA = currentData || DEMO_DATA;
+  const specs = chartSpecs(DATA);
+  Object.keys(specs).forEach(id=>{
+    document.querySelectorAll('#'+id).forEach(canvas=>{
+      if(canvas.dataset.fallbackDrawn) return;
+      canvas.dataset.fallbackDrawn = '1';
+      if(specs[id].type === 'line') renderFallbackLine(canvas, specs[id]);
+      else renderFallbackBars(canvas, specs[id]);
+    });
+  });
+  drawExtraChartsFallback(DATA);
+}
+// Admin-added custom charts ("+ กราฟ") always render this way (never through
+// Chart.js) since, unlike the 7 built-in charts, they have no fixed shape
+// known ahead of time to write a Chart.js config for.
+function drawExtraChartsFallback(DATA){
+  document.querySelectorAll('[data-extra-chart]').forEach(el=>{
+    const canvas = el.querySelector('canvas');
+    if(!canvas || canvas.dataset.fallbackDrawn) return;
+    const [pageKey, idxStr] = el.dataset.extraChart.split(':');
+    const list = (DATA.report_overrides && DATA.report_overrides.extraCharts && DATA.report_overrides.extraCharts[pageKey]) || [];
+    const ch = list[+idxStr];
+    if(!ch) return;
+    canvas.dataset.fallbackDrawn = '1';
+    renderFallbackBars(canvas, { decimals:2, labels: ch.labels, datasets: ch.datasets.map((ds,i)=>({ label:ds.label, data:ds.data, color: ['#F5B301','#34A853','#2E9BF0','#C23E8F','#8DA6D6'][i%5] })) });
+  });
+}
+
+function miniBarOpts(extra){
+  return Object.assign({
+    plugins:{legend:{display:true, labels:{font:{size:8}, boxWidth:8}}},
+    scales:{ x:{ticks:{font:{size:8}}}, y:{ticks:{font:{size:8}}} },
+    maintainAspectRatio:false
+  }, extra||{});
+}
+
+/* =========================================================
+   Default data for the mini charts on the report slides (Core
+   Process, QSHE Talk, 5ส, PIC Project, GHG, Legal). Admin edits
+   are stored in DATA.chart_overrides[key] = {labels, datasets}
+   and layered on top of these — colors/chart type stay fixed so
+   the visual design doesn't change, only labels and numbers.
+   ========================================================= */
+const CHART_DEFAULTS = {
+  coreProcess: { labels:['ตกก.','ปกก.','บกก.','พกก.','คก.ผกก.'], datasets:[
+    {label:'Target', data:[28,8,21,5,28]},
+    {label:'Actual', data:[28,8,11,5,14]},
+  ]},
+  qsheTalk: { labels:['ผจ.พกก.','ผจ.บกก.','ผจ.ปกก.','ผจ.ตกก.','ผจ.คก.'], datasets:[
+    {label:'Actual', data:[4,2,3,3,2]},
+    {label:'Target', data:[2,2,2,2,2]},
+  ]},
+  fiveS: { labels:['ผจ.พกก.','ผจ.บกก.','ผจ.ปกก.','ผจ.ตกก.','ผจ.คก.'], datasets:[
+    {label:'Actual', data:[1,1,2,1,2]},
+    {label:'Target', data:[2,2,2,2,2]},
+  ]},
+  pic: { labels:['พกก.','บกก.','ตกก.','ปกก.','คก.ผกก.'], datasets:[
+    {label:'Registered', data:[3,3,6,8,1]},
+    {label:'Result Approved', data:[0,0,0,1,0]},
+  ]},
+  ghg: { labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets:[
+    {label:'Annual accumulative', data:[8107,13370,21164,28578,35077,42250,49422,null,null,null,null,null]},
+    {label:'Maximum limit', data:Array(12).fill(110000)},
+  ]},
+  legalMonthly: { labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets:[
+    {label:'Total', data:[219,13,19,15,17,240,200,163,177,48,20,683]},
+    {label:'Complete', data:[219,13,19,15,17,240,200,163,177,null,null,null]},
+  ]},
+  legalDept: { labels:['คก.ผกก.','พกก.','บกก.','ปกก.','ตกก.'], datasets:[
+    {label:'จำนวนรายการ', data:[0,0,0,4,44]},
+  ]},
+};
+const CHART_TITLES = {
+  coreProcess:'Core Process (ร้อยละเอกสารตามแผน)', qsheTalk:'QSHE Talk', fiveS:'5ส (การตรวจพื้นที่)',
+  pic:'PIC Project', ghg:'NGV GHG Emission', legalMonthly:'เอกสารกฎหมายรายเดือน', legalDept:'เอกสารกฎหมายรายฝ่าย',
+};
+function getChartData(DATA, key){
+  const ov = DATA.chart_overrides && DATA.chart_overrides[key];
+  return ov ? ov : CHART_DEFAULTS[key];
+}
+
+function drawReportCharts(el){
+  if(typeof Chart === 'undefined') return false; // Chart.js CDN hasn't loaded yet (offline/slow/blocked) — caller retries later
+  const DATA = currentData || DEMO_DATA;
+  const q = sel => el.querySelector(sel);
+
+  // Overview slide chart — reads straight from DATA.tier2, the same data
+  // edited (with formulas) in the QSHE Index admin table, so there's
+  // nothing extra to fill in here for this view to stay current.
+  const cOv2 = q('#cvOverviewTier2');
+  if(cOv2){
+    cleanupFallback(cOv2);
+    const levelColor = v => v===null||v===undefined ? '#D1D5DB' : (v<1.5?'#EE9C9B':v<2.5?'#F5BF87':v<3.5?'#F2E066':v<4.5?'#A6E1B7':'#65D998');
+    new Chart(cOv2, { type:'bar',
+      data:{ labels: DATA.tier2.map(t=>t.name),
+        datasets:[{ label:'QSHE Index', data: DATA.tier2.map(t=>t.overall),
+          backgroundColor: DATA.tier2.map(t=>levelColor(t.overall)) }]},
+      options: miniBarOpts({ plugins:{legend:{display:false}},
+        scales:{ x:{ticks:{font:{size:8}}}, y:{beginAtZero:true, max:5, ticks:{font:{size:9}}} } })
+    });
+  }
+
+  const cCore = q('#cvCoreProcess');
+  if(cCore){
+    cleanupFallback(cCore);
+    const cd = getChartData(DATA, 'coreProcess');
+    new Chart(cCore,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[
+          {label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#F5B301'},
+          {label:cd.datasets[1].label, data:cd.datasets[1].data, backgroundColor:'#34A853'}
+        ]},
+      options: miniBarOpts({plugins:{legend:{display:true,position:'top',labels:{font:{size:8},boxWidth:8}}},
+        scales:{ x:{ticks:{font:{size:8}}}, y:{beginAtZero:true, ticks:{font:{size:8}}} }})
+    });
+  }
+
+  const cTalk = q('#cvQsheTalk');
+  if(cTalk){
+    cleanupFallback(cTalk);
+    const cd = getChartData(DATA, 'qsheTalk');
+    new Chart(cTalk,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[
+          {type:'bar', label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#8DA6D6'},
+          {type:'line', label:cd.datasets[1].label, data:cd.datasets[1].data, borderColor:'#F5C242', borderWidth:3, pointRadius:0}
+        ]},
+      options: miniBarOpts({scales:{ x:{ticks:{font:{size:7.5}}}, y:{beginAtZero:true, ticks:{font:{size:8}}} }})
+    });
+  }
+
+  const c5s = q('#cv5s');
+  if(c5s){
+    cleanupFallback(c5s);
+    const cd = getChartData(DATA, 'fiveS');
+    new Chart(c5s,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[
+          {type:'bar', label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#8DA6D6'},
+          {type:'line', label:cd.datasets[1].label, data:cd.datasets[1].data, borderColor:'#F5C242', borderWidth:3, pointRadius:0}
+        ]},
+      options: miniBarOpts({scales:{ x:{ticks:{font:{size:7.5}}}, y:{beginAtZero:true, max:3, ticks:{font:{size:8},stepSize:1} } }})
+    });
+  }
+
+  const cPic = q('#cvPic');
+  if(cPic){
+    cleanupFallback(cPic);
+    const cd = getChartData(DATA, 'pic');
+    new Chart(cPic,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[
+          {label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#F5B301'},
+          {label:cd.datasets[1].label, data:cd.datasets[1].data, backgroundColor:'#34A853'}
+        ]},
+      options: miniBarOpts({scales:{ x:{ticks:{font:{size:7.5}}}, y:{beginAtZero:true, ticks:{font:{size:8}}} }})
+    });
+  }
+
+  const cGhg = q('#cvGhg');
+  if(cGhg){
+    cleanupFallback(cGhg);
+    const cd = getChartData(DATA, 'ghg');
+    new Chart(cGhg,{
+      data:{ labels:cd.labels,
+        datasets:[
+          {type:'line', label:cd.datasets[0].label, data:cd.datasets[0].data,
+            borderColor:'#34A853', backgroundColor:'#34A853', pointRadius:3, tension:.25, yAxisID:'y'},
+          {type:'line', label:cd.datasets[1].label, data:cd.datasets[1].data,
+            borderColor:'#F5892E', borderDash:[6,4], pointRadius:0, borderWidth:2, yAxisID:'y'}
+        ]},
+      options: miniBarOpts({scales:{ x:{ticks:{font:{size:8}}}, y:{beginAtZero:true, max:140000, ticks:{font:{size:8}} } }})
+    });
+  }
+
+  const cLegalM = q('#cvLegalMonthly');
+  if(cLegalM){
+    cleanupFallback(cLegalM);
+    const cd = getChartData(DATA, 'legalMonthly');
+    new Chart(cLegalM,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[
+          {label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#D9DCDF'},
+          {label:cd.datasets[1].label, data:cd.datasets[1].data, backgroundColor:'#2196C4'}
+        ]},
+      options: miniBarOpts({scales:{ x:{ticks:{font:{size:8}}}, y:{beginAtZero:true, ticks:{font:{size:8}}} }})
+    });
+  }
+
+  const cLegalD = q('#cvLegalDept');
+  if(cLegalD){
+    cleanupFallback(cLegalD);
+    const cd = getChartData(DATA, 'legalDept');
+    new Chart(cLegalD,{ type:'bar',
+      data:{ labels:cd.labels,
+        datasets:[{ label:cd.datasets[0].label, data:cd.datasets[0].data, backgroundColor:'#2196C4' }]},
+      options: miniBarOpts({ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{beginAtZero:true, ticks:{font:{size:8}}}, y:{ticks:{font:{size:8}}} } })
+    });
+  }
+  return true;
+}
+
+/* =========================================================
+   Local persistence for admin-entered data (localStorage only —
+   there is no server, so this just remembers the last save in
+   this browser).
+   ========================================================= */
+const LS_KEY = "qshe_dashboard_saved_data_v1";
+function round2(v){ return v===null||v===undefined ? null : Math.round(v*100)/100; }
+
+function updateStatusBar(DATA){
+  document.getElementById('tbFileName').textContent = DATA.meta.source_file || 'ข้อมูลตัวอย่าง (Demo)';
+  const statusEl = document.getElementById('tbStatus');
+  const isEdited = DATA.meta && DATA.meta.generated_note && DATA.meta.generated_note.indexOf('แก้ไขด้วยตนเองโดยแอดมิน') !== -1;
+  if(!isEdited){
+    statusEl.textContent = 'แสดงข้อมูลตัวอย่างที่ฝังไว้ในไฟล์ — เข้าสู่โหมดแอดมินเพื่อแก้ไขข้อมูลเอง';
+    statusEl.className = 'tb-status';
+  } else {
+    statusEl.textContent = DATA.meta.generated_note + ' — บันทึกไว้ในเบราว์เซอร์นี้แล้ว';
+    statusEl.className = 'tb-status ok';
+  }
+}
+
+function saveToLocalStorage(DATA){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){ console.warn('บันทึกลง localStorage ไม่สำเร็จ', e); }
+}
+function loadFromLocalStorage(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+/* ---------- initial load ---------- */
+const ADMIN_PASSWORD = "qshe2569admin";
+const ADMIN_SESSION_KEY = "qshe_admin_unlocked";
+let currentData = null; // tracks the DATA currently on screen, for the admin form to read/write
+
+/* =========================================================
+   Monthly update reminder + "send completion email" button.
+   IMPORTANT LIMITATION: this file has no server, so neither of
+   these is a true background/push system — both only run while
+   someone has this page open in a browser:
+   - The reminder is just a check made every time the page loads
+     (or after Save), comparing today's month against the month
+     the data was last marked "updated". It cannot notify anyone
+     while the file is closed.
+   - "Send email" builds a mailto: link (opens the person's own
+     email app with the message pre-filled) since a static HTML
+     file cannot send email on its own — the person still has to
+     hit Send themselves.
+   ========================================================= */
+const THAI_MONTH_NAMES = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function currentYearMonth(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function checkMonthReminder(DATA){
+  const banner = document.getElementById('monthReminder');
+  const nowYm = currentYearMonth();
+  const lastYm = (DATA.meta && DATA.meta.last_updated_month) || '';
+  if(nowYm === lastYm){ banner.style.display = 'none'; adjustDeckPadding(); return; }
+  const monthName = THAI_MONTH_NAMES[new Date().getMonth()];
+  document.getElementById('reminderMonthName').textContent = ' ' + monthName;
+  banner.style.display = 'flex';
+  adjustDeckPadding();
+}
+function wireMonthReminder(){
+  document.getElementById('btnDismissReminder').addEventListener('click', function(){
+    const DATA = currentData || DEMO_DATA;
+    DATA.meta.last_updated_month = currentYearMonth();
+    saveToLocalStorage(DATA);
+    document.getElementById('monthReminder').style.display = 'none';
+    adjustDeckPadding();
+    showAdminToast('บันทึกแล้วว่าอัปเดตข้อมูลเดือนนี้เสร็จสิ้น');
+  });
+  document.getElementById('btnSnoozeReminder').addEventListener('click', function(){
+    document.getElementById('monthReminder').style.display = 'none';
+    adjustDeckPadding();
+  });
+}
+function wireSendEmailButton(){
+  document.getElementById('btnSendEmail').addEventListener('click', function(){
+    const DATA = currentData || DEMO_DATA;
+    const to = (DATA.meta && DATA.meta.notify_email) || '';
+    if(!to){
+      alert('ยังไม่ได้ตั้งอีเมลผู้รับ — เข้าโหมดแอดมินแล้วกรอกอีเมลผู้รับไว้ที่หัวข้อ "0) ช่วงเวลาของข้อมูล" ก่อนครับ');
+      return;
+    }
+    const period = (DATA.meta && DATA.meta.period_label) || '';
+    const subject = `แจ้งข้อมูล QSHE Dashboard เสร็จสิ้น — ${period}`;
+    const ls = DATA.legal_stats || {};
+    const bodyLines = [
+      `ข้อมูล QSHE Index Dashboard ประจำงวด ${period} อัปเดตเสร็จสิ้นแล้ว`,
+      '',
+      `ค่าเฉลี่ย QSHE Index ระดับฝ่าย: ${DATA.meta.avg_tier1 ?? '-'}`,
+      `ค่าเฉลี่ย QSHE Index ระดับส่วน: ${DATA.meta.avg_tier2 ?? '-'}`,
+      '',
+      `เอกสารกฎหมาย — Total: ${fmtInt(ls.total)}, Complete: ${fmtInt(ls.complete)}, On process: ${fmtInt(ls.on_process)}, Delay: ${fmtInt(ls.delay)}`,
+      '',
+      'ระบบสร้างข้อความนี้อัตโนมัติจาก NGV QSHE Dashboard — กรุณาตรวจสอบก่อนกดส่ง',
+    ];
+    const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+    window.location.href = mailto;
+  });
+}
+
+(function init(){
+  const saved = loadFromLocalStorage();
+  renderAll(saved || DEMO_DATA);
+  initAdminMode();
+  document.getElementById('btnExportPptx').addEventListener('click', exportToPptx);
+  wireMonthReminder();
+  wireSendEmailButton();
+  checkMonthReminder(currentData || DEMO_DATA);
+})();
+
+/* =========================================================
+   Admin data-entry panel
+   NOTE ON SECURITY: this is a client-side-only page with no
+   server, so this password is just a soft gate to stop casual
+   editing — anyone who views the page source can read it. It is
+   NOT real access control. Change ADMIN_PASSWORD below before
+   sharing this file if that matters for your use case.
+   ========================================================= */
+
+function initAdminMode(){
+  const unlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+  setAdminUI(unlocked);
+
+  document.getElementById('btnAdminToggle').addEventListener('click', function(){
+    const isUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+    if(isUnlocked){
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      setAdminUI(false);
+      return;
+    }
+    const pw = prompt("รหัสผ่านแอดมิน:");
+    if(pw === null) return;
+    if(pw === ADMIN_PASSWORD){
+      sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+      setAdminUI(true);
+    } else {
+      alert("รหัสผ่านไม่ถูกต้อง");
+    }
+  });
+  document.getElementById('btnAdminEdit').addEventListener('click', openAdminPanel);
+}
+
+/* =========================================================
+   Export to PowerPoint (.pptx), built live from currentData —
+   so it always reflects whatever the admin has edited/saved,
+   using the same colors/levels as the on-screen tables. Uses
+   PptxGenJS (loaded via CDN in <head>); if that CDN didn't load,
+   this tells the person plainly rather than failing silently.
+   Scope: cover, QSHE Index overview (with a native chart), one
+   table slide per group, the Safety table, and a closing slide —
+   the report-card pages (RAG boxes, icons, mini-charts) are not
+   recreated here since PowerPoint's native shapes can't reproduce
+   that layout faithfully; those stay as reference in the web page.
+   ========================================================= */
+async function exportToPptx(){
+  if(typeof PptxGenJS === 'undefined'){
+    alert('โหลดไลบรารีสำหรับสร้าง PowerPoint ไม่สำเร็จ (อินเทอร์เน็ตอาจไม่เชื่อมต่อ หรือถูกบล็อกโดยไฟร์วอลล์) — ลองเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้านี้อีกครั้ง');
+    return;
+  }
+  const btn = document.getElementById('btnExportPptx');
+  const originalLabel = btn.textContent;
+  btn.textContent = '⏳ กำลังสร้างไฟล์...';
+  btn.disabled = true;
+  try{
+    const DATA = currentData || DEMO_DATA;
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name:'WIDE', width:13.333, height:7.5 });
+    pptx.layout = 'WIDE';
+    const NAVY = '1B2A6B', BLUE = '2E9BF0', WHITE = 'FFFFFF';
+    const period = DATA.meta.period_label || 'M7-2569';
+
+    // ---- Cover slide ----
+    let s = pptx.addSlide();
+    s.background = { color: NAVY };
+    s.addText('NGV QSHE Performance', { x:0.6, y:2.6, w:12, h:1, fontSize:40, bold:true, color:WHITE, fontFace:'Calibri' });
+    s.addText(period, { x:0.6, y:3.6, w:12, h:0.6, fontSize:20, color:'BFD8FB' });
+
+    // ---- QSHE Index overview slide ----
+    s = pptx.addSlide();
+    s.addText('QSHE Index — ภาพรวม ' + period, { x:0.4, y:0.25, w:12.5, h:0.6, fontSize:24, bold:true, color:NAVY });
+    const avg2 = DATA.meta.avg_tier2 !== null && DATA.meta.avg_tier2 !== undefined ? DATA.meta.avg_tier2
+      : (DATA.tier2.filter(t=>t.overall!=null).reduce((a,b,_,arr)=>a+b.overall/arr.length,0));
+    s.addText([
+      { text: 'ค่าเฉลี่ย QSHE Index ระดับส่วน: ', options:{ bold:true } },
+      { text: Number(avg2).toFixed(2) + ' / 5.00', options:{ bold:true, color:BLUE } },
+    ], { x:0.4, y:0.95, w:8, h:0.4, fontSize:14 });
+    s.addText('จำนวนหน่วยงานระดับส่วนทั้งหมด: ' + DATA.tier2.length + ' ส่วน', { x:0.4, y:1.35, w:8, h:0.35, fontSize:12, color:'51607A' });
+    const chartData = [{
+      name: 'QSHE Index',
+      labels: DATA.tier2.map(t=>t.name),
+      values: DATA.tier2.map(t=> t.overall===null||t.overall===undefined ? 0 : Number(t.overall.toFixed(2))),
+    }];
+    s.addChart('bar', chartData, {
+      x:0.4, y:1.9, w:12.5, h:5.1,
+      barColor: BLUE, showValue:true, dataLabelPosition:'outEnd', dataLabelFontSize:9,
+      catAxisLabelFontSize:9, valAxisMinVal:0, valAxisMaxVal:5, showLegend:false,
+      chartColors: DATA.tier2.map(t=> t.overall!=null ? SOLID[levelBand(t.overall)].replace('#','') : 'D1D5DB'),
+    });
+
+    // ---- One table slide per group (พกก./บกก./ปกก./ตกก.) ----
+    const groupNames = Object.keys(DATA.groups || {});
+    groupNames.forEach(gName=>{
+      addGroupTableSlide(pptx, DATA, gName, DATA.groups[gName], NAVY, BLUE, WHITE);
+    });
+    // standalone ผจ.คก. (present in tier2 but not part of any group)
+    const groupedSections = new Set(groupNames.flatMap(g=>DATA.groups[g]));
+    const standalone = DATA.tier2.map(t=>t.name).filter(n=>!groupedSections.has(n));
+    if(standalone.length) addGroupTableSlide(pptx, DATA, 'ผจ.คก.', standalone, NAVY, BLUE, WHITE);
+
+    // ---- Safety Management Effectiveness ----
+    s = pptx.addSlide();
+    s.addText('1. Safety Management Effectiveness — LTA / PSE', { x:0.4, y:0.25, w:12.5, h:0.5, fontSize:22, bold:true, color:NAVY });
+    const safetyNames = Object.keys(DATA.safety_lta || {});
+    const safetyRows = [
+      [{ text:'', options:{ fill:{color:NAVY} } }, ...safetyNames.map(n=>({ text:n, options:{ bold:true, color:WHITE, fill:{color:NAVY}, align:'center' } }))],
+      [{ text:'LTA', options:{ bold:true, align:'center' } }, ...safetyNames.map(n=>({ text: fmtCellNum(DATA.safety_lta[n]), options:{ align:'center' } }))],
+      [{ text:'PSE', options:{ bold:true, align:'center' } }, ...safetyNames.map(n=>({ text: fmtCellNum(DATA.safety_pse[n]), options:{ align:'center' } }))],
+    ];
+    s.addTable(safetyRows, { x:0.4, y:1.0, w:12.5, colW:[1.6, ...safetyNames.map(()=>(12.5-1.6)/safetyNames.length)], fontSize:12, border:{type:'solid', color:'E1E8F0', pt:1}, autoPage:false });
+
+    // ---- Thank you slide ----
+    s = pptx.addSlide();
+    s.background = { color: BLUE };
+    s.addText('Thank You', { x:0.6, y:3.2, w:12, h:1, fontSize:44, bold:true, color:WHITE, align:'center' });
+
+    await pptx.writeFile({ fileName: 'QSHE_Index_' + period.replace(/[^\w\-]+/g,'_') + '.pptx' });
+  } catch(err){
+    console.error(err);
+    alert('สร้างไฟล์ PowerPoint ไม่สำเร็จ: ' + err.message);
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+function fmtCellNum(v){ return (v===null||v===undefined) ? '-' : String(v); }
+function addGroupTableSlide(pptx, DATA, groupTitle, sectionNames, NAVY, BLUE, WHITE){
+  const s = pptx.addSlide();
+  s.addText('QSHE Index ' + groupTitle + ' ' + (DATA.meta.period_label||''), { x:0.3, y:0.2, w:12.7, h:0.45, fontSize:18, bold:true, color:NAVY });
+  const rows = DATA.tier2_rows.map((r, idx)=>{
+    const nameCell = { text: r.name, options:{ bold: r.is_category, align:'left', fontSize:9,
+      color: r.is_category ? WHITE : '16213A', fill: r.is_category ? {color: NAVY} : undefined } };
+    const cells = sectionNames.map(sn=>{
+      const v = r.levels ? r.levels[sn] : null;
+      const band = (v!==null && v!==undefined && typeof v === 'number') ? levelBand(v) : null;
+      const text = (v===null||v===undefined) ? '-' : (typeof v === 'number' ? v.toFixed(2) : String(v));
+      return { text, options:{ align:'center', fontSize:9, bold: r.is_category,
+        color: r.is_category ? WHITE : '16213A',
+        fill: r.is_category ? {color:NAVY} : (band ? {color:SOLID[band].replace('#','')} : {color:'F4F8FC'}) } };
+    });
+    return [nameCell, ...cells];
+  });
+  const header = [
+    { text:'KPI', options:{ bold:true, fill:{color:'DCEBF7'}, color:NAVY, fontSize:9, align:'left' } },
+    ...sectionNames.map(sn=>({ text:sn, options:{ bold:true, fill:{color:'DCEBF7'}, color:NAVY, fontSize:9, align:'center' } })),
+  ];
+  const nameColW = 3.6;
+  const otherColW = (12.7 - nameColW) / sectionNames.length;
+  s.addTable([header, ...rows], {
+    x:0.3, y:0.75, w:12.7, colW:[nameColW, ...sectionNames.map(()=>otherColW)],
+    fontSize:9, border:{type:'solid', color:'FFFFFF', pt:1}, autoPage:true, autoPageLineWeight:-1,
+    rowH:0.26,
+  });
+}
+function setAdminUI(unlocked){
+  document.getElementById('btnAdminToggle').textContent = unlocked ? "🔓 ออกจากโหมดแอดมิน" : "🔧 โหมดแอดมิน";
+  document.getElementById('btnAdminEdit').style.display = unlocked ? 'inline-block' : 'none';
+}
+
+function openAdminPanel(){
+  const DATA = currentData || DEMO_DATA;
+  const overlay = document.getElementById('adminOverlay');
+
+  // Build a draft copy of tier2_rows to edit against. Weights stay stored
+  // as a fraction internally (0.05 = 5%), matching the rest of the app and
+  // the Excel source — the % column only converts to/from that fraction
+  // at the screen edge (see toDisplayUnits/fromDisplayUnits), so formulas
+  // like =W4*L4 work directly without a manual "/100".
+  ADMIN_DRAFT = JSON.parse(JSON.stringify(DATA.tier2_rows));
+
+  // Draft copy of chart data: start from any saved overrides, falling back
+  // to the built-in defaults for charts that haven't been edited yet.
+  ADMIN_CHART_DRAFT = {};
+  Object.keys(CHART_DEFAULTS).forEach(key=>{
+    const src = (DATA.chart_overrides && DATA.chart_overrides[key]) || CHART_DEFAULTS[key];
+    ADMIN_CHART_DRAFT[key] = JSON.parse(JSON.stringify(src));
+  });
+
+  // Draft copy of the Legal and compliance page's editable summary numbers
+  // and monthly document list.
+  ADMIN_LEGAL_DRAFT = {
+    stats: JSON.parse(JSON.stringify(DATA.legal_stats || { total:null, complete:null, on_process:null, delay:null, month_label:'' })),
+    docs: JSON.parse(JSON.stringify(DATA.legal_month_docs || [])),
+  };
+
+  ADMIN_EXTRA_CHARTS_DRAFT = JSON.parse(JSON.stringify((DATA.report_overrides && DATA.report_overrides.extraCharts) || {}));
+  Object.keys(REPORT_PAGE_NAMES).forEach(pk=>{ if(!ADMIN_EXTRA_CHARTS_DRAFT[pk]) ADMIN_EXTRA_CHARTS_DRAFT[pk] = []; });
+
+  const tier1Rows = DATA.tier1.map((t,i) => `
+    <tr>
+      <td class="lbl">${esc(t.name)}</td>
+      <td><input type="number" step="0.01" min="0" max="5" data-t1-idx="${i}" data-field="qshe_index" value="${t.qshe_index ?? ''}"></td>
+      <td><input type="number" step="1" min="0" max="100" data-t1-idx="${i}" data-field="weight_pct" value="${t.weight_pct ?? ''}"></td>
+    </tr>`).join('');
+
+  const safetyNames = Object.keys(DATA.safety_lta);
+  const safetyRows = safetyNames.map(n => `
+    <tr>
+      <td class="lbl">${esc(n)}</td>
+      <td><input type="number" step="1" min="1" max="5" data-safety="lta" data-name="${esc(n)}" value="${DATA.safety_lta[n] ?? ''}"></td>
+      <td><input type="number" step="1" min="1" max="5" data-safety="pse" data-name="${esc(n)}" value="${DATA.safety_pse[n] ?? ''}"></td>
+    </tr>`).join('');
+
+  ADMIN_SECTIONS = ["ผจ.กธ.","ผจ.วข.","ผจ.พผ.","ผจ.บถ.","ผจ.วม","ผจ.จห.","ผจ.ปถ.","ผจ.ปน.","ผจ.รส","ผจ.ขห.","ผจ.ลค.","ผจ.สส.","ผจ.คก."];
+  seedDefaultCategoryFormulas(ADMIN_DRAFT);
+
+  overlay.innerHTML = `
+    <div id="adminPanel">
+      <div class="ap-head">
+        <h3>แผงแก้ไขข้อมูล QSHE Index (สำหรับแอดมิน)</h3>
+        <button id="apClose">✕</button>
+      </div>
+      <div class="ap-body">
+        <div class="ap-section">
+          <h4>0) ช่วงเวลาของข้อมูล และการแจ้งเตือน</h4>
+          <p class="ap-note">ข้อความนี้แสดงบนหัวข้อหน้า "ภาพรวม" และหน้าตาราง QSHE Index ทุกฝ่าย (เช่น "M7-2569" หรือจะพิมพ์เป็น "M7-2569 (กรกฎาคม 2026)" ก็ได้)</p>
+          <input type="text" id="apPeriodLabel" value="${esc(DATA.meta.period_label || '')}" placeholder="เช่น M7-2569" style="width:100%; max-width:360px; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:'IBM Plex Sans Thai',sans-serif; margin-bottom:12px;">
+          <p class="ap-note">อีเมลผู้รับสำหรับปุ่ม "📧 ส่งอีเมลแจ้งเสร็จสิ้น" ที่แถบเครื่องมือด้านบน (จะเปิดโปรแกรมอีเมลของคุณพร้อมข้อความร่างไว้ให้ ยังต้องกดส่งเองอีกที)</p>
+          <input type="email" id="apNotifyEmail" value="${esc(DATA.meta.notify_email || '')}" placeholder="เช่น manager@ngv.co.th" style="width:100%; max-width:360px; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:'IBM Plex Sans Thai',sans-serif;">
+          <p class="ap-note" style="margin-top:10px;">⚠ ไฟล์นี้ไม่มีเซิร์ฟเวอร์ จึงไม่สามารถแจ้งเตือนหรือส่งอีเมลอัตโนมัติแบบพื้นหลังได้จริง — แถบแจ้งเตือน "เข้าสู่เดือนใหม่" ที่ด้านบนจะเช็คให้ทุกครั้งที่มีคนเปิดไฟล์นี้เท่านั้น</p>
+        </div>
+        <div class="ap-section">
+          <h4>1) ระดับฝ่าย (ผกก. / ผจ.ฝ่าย)</h4>
+          <div class="ap-scrollx"><table class="ap-table">
+            <thead><tr><th>หน่วยงาน</th><th>QSHE Index (0-5)</th><th>น้ำหนัก (%)</th></tr></thead>
+            <tbody>${tier1Rows}</tbody>
+          </table></div>
+        </div>
+        <div class="ap-section">
+          <h4>2) Safety Management Effectiveness (LTA / PSE — ระดับ L1-L5)</h4>
+          <div class="ap-scrollx"><table class="ap-table">
+            <thead><tr><th>หน่วยงาน</th><th>LTA (Level)</th><th>PSE (Level)</th></tr></thead>
+            <tbody>${safetyRows}</tbody>
+          </table></div>
+        </div>
+        <div class="ap-section">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <h4 style="margin:0;">3) QSHE Index ระดับส่วน — รายละเอียดทุกหมวด (รูปแบบเดียวกับชีท Excel ต้นฉบับ)</h4>
+            <button class="ap-btn" id="apTableModeToggle" style="background:#C23E8F; color:#fff;"></button>
+          </div>
+          <p class="ap-note">
+            <b>ผูกสูตรได้ทุกช่อง (%, Level, score) แบบ Excel:</b> กด "✏️ แก้ไขตาราง" ด้านบนก่อน แล้วพิมพ์ค่าตัวเลขตรงๆ ก็ได้ หรือพิมพ์สูตรขึ้นต้นด้วย <code>=</code> อ้างอิงเซลล์อื่น <i>ในคอลัมน์ส่วนงานเดียวกัน</i> เช่น
+            <code>=W4*L4</code>, <code>=S4+S5+S6</code>, <code>=SUM(S4:S6)</code>, <code>=S3/W3</code>
+            (W=ช่อง %, L=ช่อง Level, S=ช่อง score ของแถวลำดับที่นั้นๆ — <b>ช่อง % จะถูกนับเป็นเศษส่วนในสูตรเสมอ</b> เช่น 5% จะกลายเป็น 0.05 ให้อัตโนมัติ จึงไม่ต้องหาร 100 เองในสูตร — ดูเลขลำดับแถวได้จากคอลัมน์ <b>"แถวที่"</b> ริมซ้ายสุดของตาราง ซึ่งจะติดตรึงไว้ให้เห็นเสมอแม้เลื่อนตารางไปทางขวา)
+            เมื่ออยู่ในโหมดแก้ไข คลิกเข้าไปในช่องจะเห็นสูตรจริงให้แก้ คลิกออกจะเห็นค่าที่คำนวณได้ — กด "✅ เสร็จสิ้น" เมื่อแก้ไขเสร็จ ตารางจะกลับมาแสดงเป็นข้อความล้วน อ่านง่าย ไม่มีกรอบช่องกรอกรกตา<br>
+            แถบสีน้ำเงินเข้มคือแถวหมวดหมู่รวม (QSHE Index / 1. Role Model / 2. Quality / 3. SSHE / 4. KM-Academy / 5. ปิด Gap) — ผมใส่สูตร SUM ให้อัตโนมัติเป็นค่าเริ่มต้นแล้ว แต่แก้เป็นสูตรอื่น หรือพิมพ์ตัวเลขทับเองก็ได้ทุกช่อง<br>
+            <span class="flag-note" style="display:inline-block; margin-top:6px; padding:8px 12px;">💡 <b>ข้อใหม่ vs ข้อย่อย:</b> ระบบแยกจาก "ชื่อ" ในช่อง KPI Name เท่านั้น ไม่มีสถานะพิเศษในระบบ — ถ้าตั้งชื่อพร้อมเลขข้อ (เช่น "3.11 หัวข้อใหม่") จะเข้าใจว่าเป็น<b>ข้อใหม่แยกต่างหาก</b> ถ้า<b>ปล่อยชื่อว่างไว้</b> (แบบที่กด ＋ เพิ่มแถวจะปล่อยว่างให้อัตโนมัติ) จะถือว่าเป็น<b>ข้อย่อยต่อเนื่อง</b>จากแถวด้านบน ตามรูปแบบเดียวกับที่มีอยู่แล้วในตาราง (เช่น "3.1 LTA" ตามด้วยแถวว่างชื่อที่มีแต่คำอธิบาย "Loss Time Accident (ผู้รับเหมา)")</span>
+          </p>
+          <div class="ap-scrollx" style="max-height:460px; overflow-y:auto;" id="tier2TableWrap"></div>
+        </div>
+        <div class="ap-section">
+          <h4>4) หน้ารายงาน (Q Performance / Safety / Security / Environment / Legal)</h4>
+          <p class="ap-note">
+            แก้ไข <b>ชื่อหัวข้อ สี และข้อความ Target/Result</b> ของแต่ละกล่องในหน้ารายงานทั้ง 6 หน้าได้โดยตรงที่นี่ — ลบแถวหรือกล่องที่ไม่ต้องการได้ (✕ / 🗑) และเพิ่มแถวหรือกล่องใหม่ได้ด้วยปุ่ม "+"<br>
+            <span class="flag-note" style="display:inline-block; margin-top:6px; padding:8px 12px;">💡 กราฟของแต่ละกล่องอยู่ต่อท้ายกล่องนั้นเลย ตรงกับตำแหน่งจริงบนหน้าเว็บ (กด "📊 กราฟ: ..." เพื่อขยายดู) — กล่องไหนยังไม่มีกราฟ จะมีตัวเลือก "+ กราฟ" ให้เลือกแนบกราฟที่มีอยู่มาแสดงตรงนี้ได้ — ส่วนตัวเลขสรุปและตารางเอกสารกฎหมายของหน้า Legal ย้ายไปแก้ในหัวข้อ "5) หน้า Legal and compliance" ด้านล่าง ซึ่งรวมกราฟของหน้านั้นไว้ด้วยกันแล้วเช่นกัน</span>
+          </p>
+          <div id="reportPagesWrap"></div>
+        </div>
+        <div class="ap-section">
+          <h4>5) หน้า Legal and compliance (รวมกราฟของหน้านี้ไว้ด้วยกัน)</h4>
+          <p class="ap-note">แก้ไขได้ทั้งหมด เนื่องจากรายการเอกสารต้องอัปเดตทุกเดือน — ตัวเลขสรุป 4 ช่อง, ชื่อเดือนที่แสดงในหัวข้อ, ตารางรายการเอกสาร (เพิ่ม/ลบ/แก้ไขแถวได้), และกราฟทั้ง 2 อันของหน้านี้</p>
+          <div id="legalStatsWrap"></div>
+          <div id="legalChartsWrap" style="margin-top:14px;"></div>
+        </div>
+      </div>
+      <div class="ap-foot">
+        <button class="ap-btn reset" id="apReset">🗑️ ล้างและใช้ข้อมูลตัวอย่าง</button>
+        <button class="ap-btn cancel" id="apCancel">ยกเลิก</button>
+        <button class="ap-btn save" id="apSave">💾 บันทึกการเปลี่ยนแปลง</button>
+      </div>
+    </div>`;
+  overlay.classList.add('open');
+
+  renderTier2Table();
+  renderReportPagesSection();
+  renderLegalChartsSection();
+  renderLegalStatsSection();
+  document.getElementById('apTableModeToggle').addEventListener('click', function(){
+    TABLE_VIEW_MODE = !TABLE_VIEW_MODE;
+    renderTier2Table();
+  });
+
+  document.getElementById('apClose').addEventListener('click', closeAdminPanel);
+  document.getElementById('apCancel').addEventListener('click', closeAdminPanel);
+  document.getElementById('apReset').addEventListener('click', function(){
+    if(!confirm('ล้างข้อมูลที่บันทึกไว้ทั้งหมดและกลับไปใช้ข้อมูลตัวอย่าง ยืนยันหรือไม่?')) return;
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    renderAll(DEMO_DATA);
+    closeAdminPanel();
+  });
+  document.getElementById('apSave').addEventListener('click', function(){ saveAdminPanel(DATA); });
+}
+
+function closeAdminPanel(){
+  document.getElementById('adminOverlay').classList.remove('open');
+  document.getElementById('adminOverlay').innerHTML = '';
+  ADMIN_DRAFT = null; // discard any in-progress edits if this was a Cancel
+  ADMIN_CHART_DRAFT = null;
+  ADMIN_LEGAL_DRAFT = null;
+  ADMIN_EXTRA_CHARTS_DRAFT = null;
+}
+
+function saveAdminPanel(baseData){
+  // deep clone so we don't mutate the data currently on screen until save is confirmed
+  const newData = JSON.parse(JSON.stringify(baseData));
+
+  const periodInput = document.getElementById('apPeriodLabel');
+  if(periodInput) newData.meta.period_label = periodInput.value.trim();
+  const notifyEmailInput = document.getElementById('apNotifyEmail');
+  if(notifyEmailInput) newData.meta.notify_email = notifyEmailInput.value.trim();
+
+  document.querySelectorAll('[data-t1-idx]').forEach(inp => {
+    const i = +inp.dataset.t1Idx, field = inp.dataset.field;
+    const v = inp.value === '' ? null : Number(inp.value);
+    newData.tier1[i][field] = v;
+  });
+  document.querySelectorAll('[data-safety]').forEach(inp => {
+    const kind = inp.dataset.safety, name = inp.dataset.name;
+    const v = inp.value === '' ? null : Number(inp.value);
+    (kind === 'lta' ? newData.safety_lta : newData.safety_pse)[name] = v;
+  });
+  // ADMIN_DRAFT already holds every edit the admin made (name, description,
+  // unit, target bands, and every %/Level/score value or formula), kept
+  // live-updated as each field is blurred, and is also the source of truth
+  // for row order/count now that rows can be added or removed — so rebuild
+  // tier2_rows FROM ADMIN_DRAFT entirely rather than trying to zip it
+  // against the old array (which may now be a different length).
+  if(ADMIN_DRAFT){
+    newData.tier2_rows = ADMIN_DRAFT.map((draftRow, idx) => {
+      const row = {
+        row: draftRow.row !== undefined ? draftRow.row : null, // original Excel row number, if any — rows added here in the admin panel don't have one
+        is_category: !!draftRow.is_category,
+        name: draftRow.name,
+        kpi_desc: draftRow.kpi_desc ?? null,
+        unit: draftRow.unit ?? null,
+        bands: draftRow.bands ? draftRow.bands.slice() : [null,null,null,null,null],
+        formulas: draftRow.formulas ? JSON.parse(JSON.stringify(draftRow.formulas)) : undefined,
+        levels: {}, weights: {}, scores: {},
+      };
+      ADMIN_SECTIONS.forEach(sn=>{
+        const w = resolveCellValue(idx, 'w', sn);
+        const l = resolveCellValue(idx, 'l', sn);
+        const s = resolveCellValue(idx, 's', sn);
+        row.weights[sn] = (w===null||w===undefined) ? null : w; // resolveCellValue already returns a fraction for 'w'
+        row.levels[sn] = (l===null||l===undefined) ? null : l;
+        row.scores[sn] = (s===null||s===undefined) ? null : Math.round(s*10000)/10000;
+      });
+      row.has_level = Object.values(row.levels).some(x => x !== null && x !== undefined);
+      return row;
+    });
+  }
+
+  // keep the tier2 rollup (used by the overview chart/heatmap) in sync with tier2_rows,
+  // since both should reflect the same category rows (3=overall,4=role_model,6=quality,10=sshe,29=km_academy,35=asset_gap)
+  const catRowMap = { 3: 'overall', 4: 'role_model', 6: 'quality', 10: 'sshe', 29: 'km_academy', 35: 'asset_gap' };
+  const bySection = {};
+  newData.tier2.forEach(t => { bySection[t.name] = t; });
+  newData.tier2_rows.forEach(r => {
+    if(catRowMap[r.row]){
+      const field = catRowMap[r.row];
+      Object.keys(r.levels).forEach(sn => {
+        if(bySection[sn]) bySection[sn][field] = r.levels[sn];
+      });
+    }
+  });
+
+  const t1v = newData.tier1.map(t=>t.qshe_index).filter(v=>v!==null && v!==undefined);
+  const t2v = newData.tier2.map(t=>t.overall).filter(v=>v!==null && v!==undefined);
+  newData.meta.avg_tier1 = t1v.length ? round2(t1v.reduce((a,b)=>a+b,0)/t1v.length) : null;
+  newData.meta.avg_tier2 = t2v.length ? round2(t2v.reduce((a,b)=>a+b,0)/t2v.length) : null;
+  newData.meta.generated_note = 'แก้ไขด้วยตนเองโดยแอดมิน — ' + new Date().toLocaleString('th-TH');
+
+  // Section 4: title/color/row edits (and any added/removed boxes) for the
+  // Q Performance / Safety / Security / Environment report slides, read
+  // straight from the editor form built by renderReportPagesSection().
+  newData.report_overrides = collectReportPagesOverrides();
+  if(ADMIN_EXTRA_CHARTS_DRAFT) newData.report_overrides.extraCharts = JSON.parse(JSON.stringify(ADMIN_EXTRA_CHARTS_DRAFT));
+
+  // Section 5: chart data edits, already kept live in ADMIN_CHART_DRAFT as
+  // each cell is blurred — save as-is (only real edits differ from CHART_DEFAULTS,
+  // but storing the full set is simplest and keeps chart rendering in sync).
+  if(ADMIN_CHART_DRAFT) newData.chart_overrides = JSON.parse(JSON.stringify(ADMIN_CHART_DRAFT));
+
+  if(ADMIN_LEGAL_DRAFT){
+    newData.legal_stats = JSON.parse(JSON.stringify(ADMIN_LEGAL_DRAFT.stats));
+    newData.legal_month_docs = JSON.parse(JSON.stringify(ADMIN_LEGAL_DRAFT.docs));
+  }
+
+  saveToLocalStorage(newData);
+  renderAll(newData, { keepIndex: true });
+  closeAdminPanel();
+}
+</script>
+
+</body>
+</html>
