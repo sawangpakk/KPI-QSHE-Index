@@ -322,6 +322,9 @@ table.safety-tbl tbody tr:nth-child(odd) td.rowlabel{background:#EAF0F8;}
   <button class="tb-btn admin" id="btnAdminEdit" style="display:none;">✏️ แก้ไขข้อมูล</button>
   <button class="tb-btn secondary" id="btnExportPptx">📊 พิมพ์เป็น PPT</button>
   <button class="tb-btn secondary" id="btnSendEmail">📧 ส่งอีเมลแจ้งเสร็จสิ้น</button>
+  <button class="tb-btn secondary" id="btnBackupJson" title="ดาวน์โหลดข้อมูลทั้งหมดในหน้านี้เป็นไฟล์ .json เก็บไว้เป็นสำเนาสำรอง">💾 สำรองข้อมูล (.json)</button>
+  <button class="tb-btn admin" id="btnRestoreJson" style="display:none;" title="นำเข้าไฟล์ .json ที่เคยสำรองไว้ กลับมาแทนที่ข้อมูลปัจจุบัน">📂 นำเข้าข้อมูล (.json)</button>
+  <input type="file" id="fileRestoreJson" accept="application/json,.json">
   <span class="tb-status" id="tbStatus">แสดงข้อมูลตัวอย่างที่ฝังไว้ในไฟล์ — เข้าสู่โหมดแอดมินเพื่อแก้ไขข้อมูลเอง</span>
 </div>
 <div id="monthReminder" style="display:none;">
@@ -2191,6 +2194,65 @@ function loadFromLocalStorage(){
   }catch(e){ return null; }
 }
 
+/* =========================================================
+   Manual backup / restore via a downloaded .json file.
+   Unlike localStorage (tied to one browser), this file is a real,
+   portable copy of the data — it can be saved outside the browser,
+   emailed, put in shared storage, or loaded back on any device to
+   restore the exact same QSHE Index state. This is the main way
+   this static (no-server) page gets a "real" backup rather than
+   only the in-browser save.
+   ========================================================= */
+function downloadBackupJson(){
+  const DATA = currentData || DEMO_DATA;
+  const period = (DATA.meta && DATA.meta.period_label) || 'data';
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const filename = `QSHE_Index_backup_${period.replace(/[^\w\-]+/g,'_')}_${stamp}.json`;
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showAdminToast('ดาวน์โหลดไฟล์สำรอง "' + filename + '" แล้ว');
+}
+function isValidQsheData(obj){
+  return !!(obj && typeof obj === 'object'
+    && obj.meta && typeof obj.meta === 'object'
+    && Array.isArray(obj.tier1) && Array.isArray(obj.tier2) && Array.isArray(obj.tier2_rows)
+    && obj.safety_lta && obj.safety_pse && obj.groups);
+}
+function handleRestoreJsonFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    let parsed;
+    try{ parsed = JSON.parse(e.target.result); }
+    catch(err){ alert('ไฟล์นี้ไม่ใช่ JSON ที่ถูกต้อง อ่านไม่สำเร็จ: ' + err.message); return; }
+    if(!isValidQsheData(parsed)){
+      alert('ไฟล์นี้ไม่ใช่ไฟล์สำรองข้อมูล QSHE Index ที่ถูกต้อง (โครงสร้างข้อมูลไม่ตรง) — กรุณาเลือกไฟล์ .json ที่ดาวน์โหลดจากปุ่ม "💾 สำรองข้อมูล" เท่านั้น');
+      return;
+    }
+    if(!confirm('นำเข้าข้อมูลจากไฟล์นี้จะแทนที่ข้อมูลปัจจุบันทั้งหมด (รวมถึงที่บันทึกไว้ในเบราว์เซอร์นี้) ยืนยันหรือไม่?')) return;
+    saveToLocalStorage(parsed);
+    renderAll(parsed);
+    showAdminToast('นำเข้าข้อมูลจากไฟล์สำเร็จแล้ว');
+  };
+  reader.onerror = function(){ alert('อ่านไฟล์ไม่สำเร็จ'); };
+  reader.readAsText(file, 'utf-8');
+}
+function wireBackupRestoreButtons(){
+  document.getElementById('btnBackupJson').addEventListener('click', downloadBackupJson);
+  document.getElementById('btnRestoreJson').addEventListener('click', function(){
+    document.getElementById('fileRestoreJson').click();
+  });
+  document.getElementById('fileRestoreJson').addEventListener('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    handleRestoreJsonFile(file);
+    e.target.value = ''; // allow re-selecting the same file again later
+  });
+}
+
 /* ---------- initial load ---------- */
 const ADMIN_PASSWORD = "qshe2569admin";
 const ADMIN_SESSION_KEY = "qshe_admin_unlocked";
@@ -2272,6 +2334,7 @@ function wireSendEmailButton(){
   document.getElementById('btnExportPptx').addEventListener('click', exportToPptx);
   wireMonthReminder();
   wireSendEmailButton();
+  wireBackupRestoreButtons();
   checkMonthReminder(currentData || DEMO_DATA);
 })();
 
@@ -2431,6 +2494,7 @@ function addGroupTableSlide(pptx, DATA, groupTitle, sectionNames, NAVY, BLUE, WH
 function setAdminUI(unlocked){
   document.getElementById('btnAdminToggle').textContent = unlocked ? "🔓 ออกจากโหมดแอดมิน" : "🔧 โหมดแอดมิน";
   document.getElementById('btnAdminEdit').style.display = unlocked ? 'inline-block' : 'none';
+  document.getElementById('btnRestoreJson').style.display = unlocked ? 'inline-block' : 'none';
 }
 
 function openAdminPanel(){
